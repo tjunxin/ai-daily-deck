@@ -1,0 +1,2869 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 日报自动化生产线 · Broadcast Deck</title>
+  <style>
+    :root {
+      --paper: #f6efe1;
+      --paper-2: #ece1ce;
+      --ink: #11110f;
+      --muted: #6d665c;
+      --line: rgba(17, 17, 15, 0.16);
+      --line-strong: rgba(17, 17, 15, 0.38);
+      --red: #e73323;
+      --cyan: #0089a7;
+      --blue: #0b3b72;
+      --yellow: #f0b429;
+      --green: #10895f;
+      --shadow: rgba(39, 28, 18, 0.18);
+      --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --serif: "Iowan Old Style", "Songti SC", STSong, Georgia, serif;
+      --mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+    body {
+      color: var(--ink);
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at 16% 18%, rgba(231, 51, 35, 0.06), transparent 28%),
+        radial-gradient(circle at 86% 22%, rgba(0, 137, 167, 0.08), transparent 24%),
+        linear-gradient(135deg, var(--paper), var(--paper-2));
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(17, 17, 15, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 17, 15, 0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.18;
+      background:
+        repeating-linear-gradient(0deg, transparent 0, transparent 5px, rgba(17, 17, 15, 0.06) 6px),
+        linear-gradient(90deg, rgba(255,255,255,0.16), transparent 22%, transparent 78%, rgba(0,0,0,0.08));
+      mix-blend-mode: multiply;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px) rotate(-0.2deg); }
+      to { opacity: 1; transform: translateY(0) rotate(0deg); }
+    }
+    @keyframes slide-left {
+      from { opacity: 0; transform: translateX(-18px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+    @keyframes crawl {
+      from { transform: translateX(-6%); }
+      to { transform: translateX(4%); }
+    }
+    @keyframes stamp {
+      0% { opacity: 0; transform: scale(1.12) rotate(-10deg); }
+      100% { opacity: 1; transform: scale(1) rotate(-6deg); }
+    }
+    @keyframes needle {
+      from { transform: rotate(-38deg); }
+      to { transform: rotate(26deg); }
+    }
+    @keyframes type-line {
+      from { width: 0; }
+      to { width: var(--w); }
+    }
+    @keyframes blink {
+      0%, 45% { opacity: 1; }
+      46%, 100% { opacity: 0; }
+    }
+    @keyframes vu {
+      0%, 100% { transform: scaleY(0.72); }
+      50% { transform: scaleY(1); }
+    }
+    @keyframes play {
+      from { left: 12%; }
+      to { left: 88%; }
+    }
+    @keyframes rotate-hand {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes float-paper {
+      0%, 100% { transform: translateY(0) rotate(-0.5deg); }
+      50% { transform: translateY(-3px) rotate(0.5deg); }
+    }
+    @keyframes trace-line {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+    @keyframes node-on {
+      0% { opacity: 0; transform: translateY(16px); filter: grayscale(1); }
+      70% { opacity: 1; transform: translateY(-2px); filter: grayscale(0); }
+      100% { opacity: 1; transform: translateY(0); filter: grayscale(0); }
+    }
+    @keyframes node-dot {
+      0%, 55% { background: var(--paper); box-shadow: none; }
+      80% { background: var(--red); box-shadow: 0 0 0 8px rgba(231,51,35,0.16); }
+      100% { background: var(--paper); box-shadow: 0 0 0 4px rgba(231,51,35,0.10); }
+    }
+    @keyframes flow-step {
+      from { opacity: 0.18; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes score-fill {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(var(--score, 0.8)); }
+    }
+    @keyframes subtitle-cue {
+      0%, 18% { transform: translateY(120%); opacity: 0; }
+      28%, 100% { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes scan-line {
+      from { transform: translateX(-105%); }
+      to { transform: translateX(105%); }
+    }
+    @keyframes publish-step {
+      0% { background: rgba(255,255,255,0.48); box-shadow: none; transform: translateY(0); }
+      38% { background: var(--ink); color: var(--paper); box-shadow: 0 0 0 5px rgba(231,51,35,0.16); transform: translateY(-5px); }
+      100% { background: rgba(255,255,255,0.48); color: var(--ink); box-shadow: none; transform: translateY(0); }
+    }
+    @keyframes file-drop {
+      from { opacity: 0; transform: translateX(18px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .deck { position: relative; width: 100vw; height: 100vh; }
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      padding: 5.6vh 5vw 4.8vh;
+      overflow: hidden;
+    }
+    .slide.active { display: block; }
+    .slide.active [data-rise] { animation: rise 480ms cubic-bezier(.2,.8,.1,1) both; animation-delay: var(--d, 0ms); }
+    .slide.active [data-left] { animation: slide-left 480ms cubic-bezier(.2,.8,.1,1) both; animation-delay: var(--d, 0ms); }
+
+    .topbar {
+      position: absolute;
+      top: 2.4vh;
+      left: 5vw;
+      right: 5vw;
+      z-index: 10;
+      display: flex;
+      justify-content: flex-end;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.75vw, 14px);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .topbar span:first-child { display: none; }
+    .progress {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      height: 5px;
+      width: calc(var(--p, 0) * 1%);
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--cyan), var(--blue));
+      z-index: 100;
+      transition: width 260ms ease;
+    }
+    .ticker {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 3.3vh;
+      height: 3.4vh;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      overflow: hidden;
+      white-space: nowrap;
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.78vw, 14px);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(246, 239, 225, 0.72);
+    }
+    .ticker span {
+      display: inline-block;
+      padding-right: 0;
+      animation: none;
+    }
+    .ticker span + span { display: none; }
+    .page-mark {
+      position: absolute;
+      right: 5vw;
+      bottom: 7.6vh;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: clamp(14px, 1vw, 19px);
+      font-weight: 850;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 2px solid var(--ink);
+      background: rgba(246, 239, 225, 0.86);
+      padding: 0.62vh 0.8vw;
+      min-width: 4.8em;
+      text-align: center;
+      box-shadow: 5px 5px 0 rgba(17,17,15,0.10);
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    .kicker {
+      display: none;
+      font-family: var(--mono);
+      color: var(--red);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: clamp(11px, 0.82vw, 15px);
+      margin-bottom: 1.5vh;
+      font-weight: 760;
+    }
+    .headline {
+      font-family: var(--serif);
+      font-size: clamp(54px, 8vw, 128px);
+      line-height: 0.9;
+      letter-spacing: 0;
+      font-weight: 860;
+      max-width: 13ch;
+    }
+    .headline.sans {
+      font-family: var(--sans);
+      font-weight: 880;
+      letter-spacing: 0;
+    }
+    .cover-title {
+      font-size: clamp(62px, 7vw, 112px);
+      line-height: 0.92;
+      max-width: 9ch;
+    }
+    .headline.medium { font-size: clamp(40px, 5.5vw, 88px); max-width: 15ch; }
+    .headline.topic {
+      font-size: clamp(40px, 4.7vw, 74px);
+      line-height: 0.96;
+      max-width: 14ch;
+    }
+    .headline.wide { max-width: 18ch; }
+    .lead {
+      margin-top: 2vh;
+      max-width: 48ch;
+      color: var(--muted);
+      font-size: clamp(16px, 1.35vw, 24px);
+      line-height: 1.52;
+      font-weight: 540;
+    }
+    .small-lead {
+      font-size: clamp(13px, 1.02vw, 18px);
+      line-height: 1.55;
+      max-width: 58ch;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1vw;
+      margin-top: 3vh;
+    }
+    .detail-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .detail-grid.llm-steps {
+      counter-reset: llm-step;
+    }
+    .detail-card {
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.48);
+      padding: 1.6vh 1vw;
+      box-shadow: 6px 6px 0 rgba(17,17,15,0.08);
+      min-height: 15vh;
+    }
+    .llm-steps .detail-card {
+      position: relative;
+      padding-top: 4.4vh;
+    }
+    .llm-steps .detail-card::before {
+      content: attr(data-step);
+      position: absolute;
+      top: 1.15vh;
+      left: 1vw;
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.72vw, 13px);
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: var(--red);
+    }
+    .detail-card b {
+      display: block;
+      font-size: clamp(15px, 1.08vw, 21px);
+      margin-bottom: 0.9vh;
+    }
+    .detail-card p, .detail-card li {
+      color: var(--muted);
+      font-size: clamp(12px, 0.86vw, 15px);
+      line-height: 1.46;
+    }
+    .detail-card ul {
+      margin: 0;
+      padding-left: 1.1em;
+    }
+    .detail-card code, .formula code, .log-paper code {
+      color: var(--red);
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    .llm-flow-board {
+      margin-top: 3vh;
+      background:
+        linear-gradient(90deg, rgba(231,51,35,0.08), transparent 26%, transparent 72%, rgba(0,137,167,0.12)),
+        rgba(255,255,255,0.40);
+      box-shadow: 16px 16px 0 rgba(17,17,15,0.10);
+      padding: 2.45vh 1.45vw;
+      min-height: 55vh;
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: 1.85vh;
+    }
+    .llm-flow-main {
+      display: grid;
+      grid-template-columns: 1fr 28px 1.05fr 28px 1.05fr 28px 1fr;
+      gap: 0.65vw;
+      align-items: stretch;
+    }
+    .llm-flow-card {
+      position: relative;
+      border: 2px solid var(--ink);
+      background: rgba(246,239,225,0.88);
+      padding: 1.35vh 0.9vw;
+      min-height: 20vh;
+      box-shadow: 6px 6px 0 rgba(17,17,15,0.10);
+    }
+    .llm-flow-card.provider {
+      background: var(--ink);
+      color: var(--paper);
+      box-shadow: 7px 7px 0 rgba(231,51,35,0.35);
+    }
+    .llm-flow-card.schema {
+      background: rgba(0,137,167,0.12);
+      border-color: rgba(17,17,15,0.72);
+    }
+    .llm-flow-card small {
+      display: block;
+      color: var(--red);
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.72vw, 13px);
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.8vh;
+    }
+    .llm-flow-card.provider small { color: var(--yellow); }
+    .llm-flow-card b {
+      display: block;
+      font-size: clamp(19px, 1.35vw, 27px);
+      line-height: 1.06;
+      margin-bottom: 0.9vh;
+    }
+    .llm-flow-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(11px, 0.82vw, 15px);
+      line-height: 1.45;
+    }
+    .llm-flow-card.provider p { color: rgba(246,239,225,0.74); }
+    .llm-flow-card code {
+      color: var(--red);
+      font-family: var(--mono);
+      font-size: 0.9em;
+    }
+    .llm-flow-card.provider code { color: var(--yellow); }
+    .llm-flow-arrow {
+      align-self: center;
+      height: 4px;
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--cyan));
+      position: relative;
+      transform-origin: left center;
+    }
+    .slide.active .llm-flow-arrow {
+      animation: trace-line 820ms cubic-bezier(.2,.8,.1,1) both;
+      animation-delay: calc(var(--i, 0) * 120ms + 220ms);
+    }
+    .llm-flow-arrow::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+      width: 12px;
+      height: 12px;
+      border-top: 4px solid var(--cyan);
+      border-right: 4px solid var(--cyan);
+    }
+    .llm-flow-detail {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1vw;
+      align-items: stretch;
+    }
+    .schema-mini {
+      border: 2px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 1.2vh 1vw;
+      font-family: var(--mono);
+      box-shadow: 7px 7px 0 rgba(17,17,15,0.10);
+    }
+    .schema-mini b {
+      display: block;
+      color: var(--yellow);
+      font-family: var(--sans);
+      font-size: clamp(15px, 1.05vw, 20px);
+      margin-bottom: 0.65vh;
+    }
+    .schema-mini code {
+      display: block;
+      color: rgba(246,239,225,0.82);
+      font-size: clamp(10px, 0.72vw, 13px);
+      line-height: 1.5;
+      white-space: pre;
+    }
+    .fallback-branch {
+      position: relative;
+      border: 2px dashed var(--red);
+      background: rgba(255,255,255,0.52);
+      padding: 1.2vh 1vw;
+      box-shadow: 7px 7px 0 rgba(231,51,35,0.10);
+    }
+    .fallback-branch::before {
+      content: "parse fail";
+      position: absolute;
+      left: 0.9vw;
+      top: -1.55vh;
+      font-family: var(--mono);
+      font-size: clamp(9px, 0.66vw, 12px);
+      color: var(--red);
+      background: var(--paper);
+      border: 1px solid var(--red);
+      padding: 0.22vh 0.45vw;
+    }
+    .fallback-branch b {
+      display: block;
+      color: var(--red);
+      font-size: clamp(16px, 1.1vw, 22px);
+      margin-bottom: 0.55vh;
+    }
+    .fallback-branch p {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(11px, 0.8vw, 14px);
+      line-height: 1.45;
+    }
+    .lead code, .small-lead code {
+      color: var(--ink);
+      background: rgba(255,255,255,0.54);
+      border: 1px solid var(--line-strong);
+      padding: 0.05em 0.35em;
+      font-family: var(--mono);
+      font-size: 0.9em;
+    }
+    .formula {
+      border: 2px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 1.7vh 1vw;
+      box-shadow: 10px 10px 0 var(--red);
+      font-family: var(--mono);
+      font-size: clamp(11px, 0.82vw, 15px);
+      line-height: 1.6;
+    }
+    .formula code { color: var(--yellow); }
+    .source-board {
+      display: grid;
+      grid-template-columns: 1.1fr 0.8fr 1.1fr;
+      gap: 1vw;
+      align-items: stretch;
+      margin-top: 3vh;
+    }
+    .source-lane {
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.46);
+      padding: 1.8vh 1vw;
+      box-shadow: 8px 8px 0 rgba(17,17,15,0.09);
+    }
+    .source-lane h3 {
+      font-size: clamp(18px, 1.45vw, 28px);
+      margin-bottom: 1.4vh;
+    }
+    .source-lane .line {
+      display: flex;
+      justify-content: space-between;
+      gap: 1vw;
+      padding: 0.9vh 0;
+      border-top: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.78vw, 14px);
+    }
+    .source-lane .line span:last-child { color: var(--muted); text-align: right; }
+    .source-arrow {
+      align-self: center;
+      height: 4px;
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--cyan));
+      position: relative;
+    }
+    .source-arrow::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+      width: 12px;
+      height: 12px;
+      border-top: 4px solid var(--cyan);
+      border-right: 4px solid var(--cyan);
+    }
+    .stacked-lines {
+      display: grid;
+      gap: 0.85vh;
+      margin-top: 2vh;
+      font-family: var(--mono);
+      font-size: clamp(11px, 0.84vw, 15px);
+    }
+    .stacked-lines div {
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.42);
+      padding: 0.85vh 0.8vw;
+      display: flex;
+      justify-content: space-between;
+      gap: 1vw;
+    }
+    .stacked-lines span:last-child { color: var(--muted); text-align: right; }
+    .mini-flow {
+      display: grid;
+      grid-template-columns: repeat(var(--steps, 4), minmax(0, 1fr));
+      gap: 0.65vw;
+      margin-top: 2vh;
+    }
+    .mini-step {
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.48);
+      padding: 1.2vh 0.8vw;
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.75vw, 14px);
+      min-height: 9vh;
+    }
+    .slide.active .mini-flow.sequence .mini-step {
+      animation: publish-step 900ms cubic-bezier(.2,.8,.1,1) both;
+      animation-delay: calc(var(--i, 0) * 240ms + 220ms);
+    }
+    .mini-step b {
+      display: block;
+      font-family: var(--sans);
+      font-size: clamp(14px, 1vw, 18px);
+      margin-bottom: 0.6vh;
+    }
+    .mono { font-family: var(--mono); }
+    .red { color: var(--red); }
+    .cyan { color: var(--cyan); }
+    .blue { color: var(--blue); }
+    .muted { color: var(--muted); }
+
+    .split {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: 5vw;
+      align-items: center;
+    }
+    .split.rev { grid-template-columns: 1.1fr 0.9fr; }
+
+    .lower-third {
+      display: inline-grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 0.8vw;
+      padding: 0.8vh 0.9vw;
+      border: 2px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      font-family: var(--mono);
+      font-size: clamp(11px, 0.84vw, 16px);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      box-shadow: 8px 8px 0 var(--red);
+    }
+    .live-dot {
+      width: 0.82em;
+      height: 0.82em;
+      background: var(--red);
+      border-radius: 50%;
+      animation: blink 1.8s step-end infinite;
+    }
+
+    .broadcast-stage {
+      position: relative;
+      height: 66vh;
+      min-height: 500px;
+      border: 2px solid var(--ink);
+      background:
+        linear-gradient(90deg, rgba(231,51,35,0.10) 0 12%, transparent 12% 88%, rgba(0,137,167,0.12) 88%),
+        rgba(255,255,255,0.34);
+      box-shadow: 18px 18px 0 rgba(17,17,15,0.10);
+      overflow: hidden;
+    }
+    .broadcast-stage::before {
+      content: "";
+      position: absolute;
+      inset: 8% 7%;
+      border: 1px solid var(--line-strong);
+    }
+    .broadcast-stage::after {
+      content: "ON AIR";
+      position: absolute;
+      top: 4%;
+      right: 5%;
+      font-family: var(--mono);
+      color: var(--paper);
+      background: var(--red);
+      padding: 0.55vh 0.72vw;
+      letter-spacing: 0.12em;
+      font-size: clamp(10px, 0.74vw, 14px);
+    }
+    .signal-path {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .signal-path path {
+      fill: none;
+      stroke: var(--cyan);
+      stroke-width: 2;
+      stroke-dasharray: 8 10;
+      animation: crawl 10s ease-in-out infinite alternate;
+    }
+    .stage-chip {
+      position: absolute;
+      min-width: 11vw;
+      max-width: 15vw;
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      padding: 1.4vh 1vw;
+      box-shadow: 7px 7px 0 rgba(17,17,15,0.12);
+      font-family: var(--mono);
+      transform: rotate(var(--r, 0deg));
+    }
+    .stage-chip b { display: block; font-family: var(--sans); font-size: clamp(16px, 1.25vw, 24px); margin-bottom: 0.5vh; }
+    .stage-chip small { color: var(--muted); }
+    .stage-chip:nth-of-type(1) { left: 7%; top: 16%; --r: -2deg; }
+    .stage-chip:nth-of-type(2) { right: 12%; top: 13%; --r: 1.5deg; }
+    .stage-chip:nth-of-type(3) { left: 39%; top: 38%; --r: -1deg; border-color: var(--red); }
+    .stage-chip:nth-of-type(4) { left: 12%; bottom: 13%; --r: 1deg; }
+    .stage-chip:nth-of-type(5) { right: 9%; bottom: 16%; --r: -1.5deg; }
+
+    .constraint-wall {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.2vw;
+      margin-top: 5vh;
+    }
+    .note {
+      min-height: 35vh;
+      padding: 2.4vh 1.25vw;
+      background: rgba(255,255,255,0.48);
+      border: 2px solid var(--ink);
+      box-shadow: 10px 10px 0 rgba(17,17,15,0.10);
+      transform: rotate(var(--r, 0deg));
+      animation: float-paper 8s ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+    .note h3 { font-size: clamp(20px, 1.55vw, 30px); margin-bottom: 2vh; }
+    .note p { color: var(--muted); line-height: 1.52; font-size: clamp(13px, 0.95vw, 17px); }
+    .note code { color: var(--red); font-family: var(--mono); }
+
+    .floorplan {
+      position: relative;
+      height: 62vh;
+      border: 2px solid var(--ink);
+      background:
+        linear-gradient(90deg, transparent 49.8%, var(--line) 49.8% 50.2%, transparent 50.2%),
+        linear-gradient(0deg, transparent 49.8%, var(--line) 49.8% 50.2%, transparent 50.2%),
+        rgba(255,255,255,0.32);
+      box-shadow: 14px 14px 0 rgba(17,17,15,0.08);
+      overflow: hidden;
+    }
+    .room {
+      position: absolute;
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      padding: 1.4vh 1vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 6px 6px 0 rgba(17,17,15,0.10);
+    }
+    .room b { font-size: clamp(16px, 1.25vw, 23px); }
+    .room span { color: var(--muted); font-family: var(--mono); font-size: clamp(10px, 0.75vw, 13px); }
+    .r1 { left: 5%; top: 12%; width: 20%; height: 30%; }
+    .r2 { left: 29%; top: 12%; width: 20%; height: 30%; }
+    .r3 { left: 53%; top: 12%; width: 20%; height: 30%; border-color: var(--red); }
+    .r4 { left: 77%; top: 12%; width: 17%; height: 30%; }
+    .r5 { left: 17%; bottom: 10%; width: 25%; height: 28%; }
+    .r6 { left: 47%; bottom: 10%; width: 23%; height: 28%; }
+    .r7 { right: 5%; bottom: 10%; width: 20%; height: 28%; }
+    .active .room { animation: rise 360ms both; animation-delay: calc(var(--i) * 35ms + 120ms); }
+    .floor-arrow {
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      top: 50%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--cyan));
+    }
+    .floor-arrow::after {
+      content: "";
+      position: absolute;
+      right: -3px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+      width: 14px;
+      height: 14px;
+      border-top: 4px solid var(--cyan);
+      border-right: 4px solid var(--cyan);
+    }
+    .module-map {
+      margin-top: 2.2vh;
+      border: 2px solid var(--ink);
+      background:
+        linear-gradient(90deg, rgba(231,51,35,0.08), transparent 22%, transparent 78%, rgba(0,137,167,0.10)),
+        rgba(255,255,255,0.36);
+      box-shadow: 16px 16px 0 rgba(17,17,15,0.10);
+      padding: 2.3vh 1.6vw;
+    }
+    .module-columns {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1vw;
+    }
+    .module-box {
+      border: 2px solid var(--ink);
+      background: rgba(246,239,225,0.78);
+      box-shadow: 7px 7px 0 rgba(17,17,15,0.10);
+      min-height: 31vh;
+      padding: 1.55vh 0.95vw;
+      position: relative;
+    }
+    .module-box:nth-child(3) { border-color: var(--red); }
+    .module-box small {
+      display: block;
+      color: var(--red);
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.72vw, 13px);
+      margin-bottom: 0.7vh;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .module-box h3 {
+      font-size: clamp(18px, 1.4vw, 27px);
+      margin-bottom: 1.2vh;
+    }
+    .module-item {
+      border-top: 1px solid var(--line-strong);
+      padding: 0.8vh 0;
+      min-height: 4.7vh;
+    }
+    .module-item b {
+      display: block;
+      font-size: clamp(12px, 0.9vw, 16px);
+      margin-bottom: 0.25vh;
+    }
+    .module-item span {
+      display: block;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: clamp(9px, 0.68vw, 12px);
+      line-height: 1.35;
+    }
+    .contract-lane {
+      margin-top: 2vh;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 0.7vw;
+      align-items: center;
+      font-family: var(--mono);
+    }
+    .contract-node {
+      border: 2px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 1.05vh 0.9vw;
+      box-shadow: 6px 6px 0 var(--red);
+      min-height: 8.6vh;
+    }
+    .contract-node b {
+      display: block;
+      font-family: var(--sans);
+      font-size: clamp(15px, 1.1vw, 21px);
+      margin-bottom: 0.35vh;
+    }
+    .contract-node span {
+      color: rgba(246,239,225,0.70);
+      font-size: clamp(9px, 0.68vw, 12px);
+      line-height: 1.35;
+    }
+    .contract-arrow {
+      height: 3px;
+      min-width: 3vw;
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--cyan));
+      position: relative;
+    }
+    .contract-arrow::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+      width: 9px;
+      height: 9px;
+      border-top: 3px solid var(--cyan);
+      border-right: 3px solid var(--cyan);
+    }
+    .process-map {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.05vw;
+      margin-top: 3vh;
+    }
+    .process-step {
+      position: relative;
+      min-height: 22vh;
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.48);
+      padding: 1.65vh 1vw;
+      box-shadow: 8px 8px 0 rgba(17,17,15,0.09);
+    }
+    .process-step::before {
+      content: attr(data-step);
+      display: inline-block;
+      font-family: var(--mono);
+      color: var(--red);
+      font-size: clamp(11px, 0.8vw, 15px);
+      margin-bottom: 1.3vh;
+    }
+    .process-step h3 {
+      font-size: clamp(20px, 1.45vw, 28px);
+      margin-bottom: 1vh;
+    }
+    .process-step p {
+      color: var(--muted);
+      font-size: clamp(12px, 0.86vw, 15px);
+      line-height: 1.48;
+    }
+    .process-step code {
+      color: var(--red);
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    .spine-board {
+      margin-top: 3vh;
+      border: 2px solid var(--ink);
+      background:
+        linear-gradient(90deg, rgba(231,51,35,0.08), transparent 24%, transparent 78%, rgba(0,137,167,0.12)),
+        rgba(255,255,255,0.38);
+      box-shadow: 16px 16px 0 rgba(17,17,15,0.10);
+      padding: 2.4vh 1.5vw;
+      min-height: 52vh;
+    }
+    .spine-lanes {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 0.65vw;
+      position: relative;
+      padding-top: 5.2vh;
+    }
+    .spine-lanes::before {
+      content: "";
+      position: absolute;
+      left: 5.5%;
+      right: 5.5%;
+      top: 6.9vh;
+      height: 5px;
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--green), var(--cyan), var(--blue));
+      box-shadow: 0 2px 0 rgba(17,17,15,0.18);
+      transform-origin: left center;
+    }
+    .slide.active .spine-lanes::before {
+      animation: trace-line 1.8s cubic-bezier(.2,.8,.1,1) 160ms both;
+    }
+    .spine-node {
+      position: relative;
+      border: 2px solid var(--ink);
+      background: rgba(246,239,225,0.82);
+      min-height: 25vh;
+      padding: 4.4vh 0.75vw 1.15vh;
+      box-shadow: 6px 6px 0 rgba(17,17,15,0.10);
+    }
+    .slide.active .spine-node {
+      animation: node-on 520ms cubic-bezier(.2,.8,.1,1) both;
+      animation-delay: calc((var(--step-index, 1) - 1) * 145ms + 240ms);
+    }
+    .spine-node::before {
+      content: attr(data-step);
+      position: absolute;
+      left: 0.75vw;
+      top: 1.05vh;
+      font-family: var(--mono);
+      color: var(--red);
+      font-size: clamp(10px, 0.74vw, 13px);
+      font-weight: 850;
+    }
+    .spine-node::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -0.7vh;
+      transform: translateX(-50%);
+      width: 1.05vw;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--paper);
+      border: 3px solid var(--ink);
+      z-index: 1;
+    }
+    .slide.active .spine-node::after {
+      animation: node-dot 900ms ease-out both;
+      animation-delay: calc((var(--step-index, 1) - 1) * 145ms + 430ms);
+    }
+    .spine-node h3 {
+      font-size: clamp(17px, 1.18vw, 23px);
+      line-height: 1.1;
+      margin-bottom: 0.9vh;
+    }
+    .spine-node p {
+      color: var(--muted);
+      font-size: clamp(10px, 0.74vw, 13px);
+      line-height: 1.38;
+    }
+    .spine-node code {
+      color: var(--red);
+      font-family: var(--mono);
+      font-size: 0.9em;
+    }
+    .side-chip {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: -5vh;
+      border: 2px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 0.62vh 0.55vw;
+      font-family: var(--mono);
+      font-size: clamp(8px, 0.62vw, 11px);
+      white-space: nowrap;
+      box-shadow: 4px 4px 0 var(--red);
+    }
+    .artifact-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.8vw;
+      margin-top: 2.2vh;
+    }
+    .artifact-strip div {
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.50);
+      padding: 1vh 0.8vw;
+      box-shadow: 5px 5px 0 rgba(17,17,15,0.08);
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.72vw, 13px);
+      line-height: 1.4;
+    }
+    .artifact-strip b {
+      display: block;
+      color: var(--red);
+      font-family: var(--sans);
+      font-size: clamp(13px, 0.92vw, 17px);
+      margin-bottom: 0.3vh;
+    }
+    .entry-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.55vw;
+      margin-top: 1.6vh;
+      max-width: 86vw;
+    }
+    .entry-strip strong,
+    .entry-strip code {
+      border: 2px solid var(--ink);
+      padding: 0.52vh 0.65vw;
+      box-shadow: 4px 4px 0 rgba(17,17,15,0.08);
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.74vw, 14px);
+      white-space: nowrap;
+    }
+    .entry-strip strong {
+      background: var(--ink);
+      color: var(--paper);
+      font-family: var(--sans);
+      font-weight: 820;
+    }
+    .entry-strip code {
+      background: rgba(255,255,255,0.50);
+      color: var(--red);
+    }
+
+    .slip-stage {
+      position: relative;
+      height: 60vh;
+    }
+    .slip {
+      position: absolute;
+      box-sizing: border-box;
+      width: 15%;
+      height: 24vh;
+      min-height: 158px;
+      padding: 2vh 1.15vw;
+      background: rgba(255,255,255,0.58);
+      border: 2px solid var(--ink);
+      box-shadow: 12px 12px 0 rgba(17,17,15,0.10);
+      transform: rotate(var(--r));
+    }
+    .slip b { display: block; font-size: clamp(16px, 1.25vw, 24px); margin-top: 4.6vh; }
+    .slip span { color: var(--muted); font-family: var(--mono); line-height: 1.5; font-size: clamp(10px, 0.76vw, 14px); }
+    .active .slip { animation: rise 360ms both; animation-delay: calc(var(--i) * 50ms + 120ms); }
+    .slip:nth-child(1) { left: 0.5%; top: 12%; --r: -2.2deg; }
+    .slip:nth-child(2) { left: 17%; top: 20%; --r: 1.3deg; }
+    .slip:nth-child(3) { left: 33.5%; top: 12%; --r: -1.2deg; }
+    .slip:nth-child(4) { left: 50%; top: 20%; --r: 1.8deg; border-color: var(--red); }
+    .slip:nth-child(5) { left: 66.5%; top: 12%; --r: -1.5deg; }
+    .slip:nth-child(6) { left: 83%; top: 20%; --r: 1deg; }
+    .stamp {
+      position: absolute;
+      right: 8%;
+      bottom: 9%;
+      border: 5px solid var(--red);
+      color: var(--red);
+      padding: 1.2vh 1vw;
+      font-family: var(--mono);
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      font-size: clamp(22px, 2vw, 34px);
+      transform: rotate(-8deg);
+      opacity: 0;
+    }
+    .active .stamp { animation: stamp 420ms cubic-bezier(.2,.8,.1,1) 700ms both; }
+
+    .handoff-map {
+      margin-top: 3vh;
+      border: 2px solid var(--ink);
+      background:
+        linear-gradient(90deg, rgba(231,51,35,0.08), transparent 23%, transparent 78%, rgba(0,137,167,0.12)),
+        rgba(255,255,255,0.38);
+      box-shadow: 16px 16px 0 rgba(17,17,15,0.10);
+      padding: 2.4vh 1.7vw;
+      min-height: 52vh;
+      position: relative;
+    }
+    .handoff-flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1.12fr auto 1fr auto 1fr;
+      gap: 0.72vw;
+      align-items: center;
+    }
+    .handoff-card {
+      min-height: 30vh;
+      border: 2px solid var(--ink);
+      background: rgba(246,239,225,0.78);
+      padding: 1.45vh 0.9vw;
+      box-shadow: 7px 7px 0 rgba(17,17,15,0.10);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .handoff-card.featured {
+      background: var(--ink);
+      color: var(--paper);
+      box-shadow: 8px 8px 0 var(--red);
+      transform: translateY(-0.8vh);
+    }
+    .handoff-card small {
+      color: var(--red);
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.74vw, 13px);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .handoff-card.featured small { color: var(--yellow); }
+    .handoff-card h3 {
+      font-size: clamp(18px, 1.35vw, 27px);
+      line-height: 1.05;
+      margin-top: 0.8vh;
+    }
+    .handoff-card p {
+      color: var(--muted);
+      font-size: clamp(11px, 0.78vw, 14px);
+      line-height: 1.42;
+      margin-top: 0.9vh;
+    }
+    .handoff-card.featured p {
+      color: rgba(246,239,225,0.78);
+    }
+    .handoff-meta {
+      display: grid;
+      gap: 0.45vh;
+      margin-top: 1.2vh;
+      font-family: var(--mono);
+      font-size: clamp(9px, 0.66vw, 12px);
+      color: var(--muted);
+    }
+    .handoff-card.featured .handoff-meta { color: rgba(246,239,225,0.76); }
+    .handoff-meta div {
+      border-top: 1px solid rgba(17,17,15,0.22);
+      padding-top: 0.45vh;
+    }
+    .handoff-card.featured .handoff-meta div {
+      border-top-color: rgba(246,239,225,0.24);
+    }
+    .handoff-arrow {
+      width: 3.2vw;
+      height: 4px;
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--cyan));
+      position: relative;
+    }
+    .handoff-arrow::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+      width: 12px;
+      height: 12px;
+      border-top: 4px solid var(--cyan);
+      border-right: 4px solid var(--cyan);
+    }
+    .handoff-legend {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.9vw;
+      margin-top: 2.2vh;
+    }
+    .handoff-legend div {
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.50);
+      padding: 1.15vh 0.85vw;
+      box-shadow: 5px 5px 0 rgba(17,17,15,0.08);
+      font-size: clamp(12px, 0.86vw, 15px);
+      line-height: 1.35;
+    }
+    .handoff-legend b {
+      display: block;
+      color: var(--red);
+      margin-bottom: 0.35vh;
+    }
+    .module-band {
+      display: grid;
+      grid-template-columns: 1.1fr 1.5fr 1.1fr 1fr;
+      gap: 0.7vw;
+      margin-top: 1.6vh;
+      font-family: var(--mono);
+      font-size: clamp(9px, 0.66vw, 12px);
+      color: var(--muted);
+    }
+    .module-band span {
+      border-top: 2px solid var(--line-strong);
+      padding-top: 0.55vh;
+    }
+
+    .editor-board {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 3vw;
+      align-items: center;
+    }
+    .meter-wall {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.1vw;
+    }
+    .meter {
+      position: relative;
+      height: 20vh;
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.46);
+      box-shadow: 8px 8px 0 rgba(17,17,15,0.08);
+      padding: 2vh 1vw;
+      overflow: hidden;
+    }
+    .meter b { font-size: clamp(18px, 1.35vw, 26px); }
+    .dial {
+      position: absolute;
+      left: 50%;
+      bottom: -32%;
+      width: 11vw;
+      height: 11vw;
+      border: 2px solid var(--line-strong);
+      border-radius: 50%;
+      transform: translateX(-50%);
+    }
+    .dial::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 2px;
+      height: 44%;
+      background: var(--red);
+      transform-origin: bottom;
+      transform: rotate(-62deg);
+    }
+    .active .dial::before { animation: needle 1.6s cubic-bezier(.2,.8,.1,1) both; animation-delay: var(--d, 280ms); }
+    .score-list {
+      border: 2px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 1.2vh 1.1vw;
+      box-shadow: 12px 12px 0 var(--red);
+    }
+    .score-row {
+      display: grid;
+      grid-template-columns: 2.4vw 1fr 4vw;
+      gap: 0.8vw;
+      align-items: center;
+      font-family: var(--mono);
+      border-bottom: 1px solid rgba(246,239,225,0.18);
+      padding: 0.65vh 0;
+      color: rgba(246,239,225,0.88);
+    }
+    .score-row strong { font-family: var(--sans); color: var(--paper); }
+
+    .teleprompter {
+      position: relative;
+      border: 8px solid var(--ink);
+      background: #0a0c0f;
+      color: #d9fff0;
+      min-height: 56vh;
+      padding: 4vh 2vw;
+      box-shadow: 18px 18px 0 rgba(17,17,15,0.16);
+      font-family: var(--mono);
+      overflow: hidden;
+    }
+    .type-line {
+      display: block;
+      width: auto;
+      overflow: hidden;
+      white-space: nowrap;
+      margin: 1.2vh 0;
+      animation: none;
+      animation-delay: 0ms;
+    }
+    .slide.active .type-line {
+      width: 0;
+      animation: type-line 620ms steps(24, end) both;
+      animation-delay: calc(var(--i, 0) * 260ms + 260ms);
+    }
+    .cursor {
+      display: inline-block;
+      width: 0.6em;
+      height: 1em;
+      background: var(--green);
+      animation: blink 1.3s step-end infinite;
+      vertical-align: -0.15em;
+      margin-left: 0.2em;
+    }
+
+    .voice-booth {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 3vw;
+      align-items: center;
+    }
+    .booth {
+      position: relative;
+      min-height: 58vh;
+      background: rgba(255,255,255,0.38);
+      box-shadow: 16px 16px 0 rgba(17,17,15,0.10);
+      padding: 3vh 2vw;
+      overflow: hidden;
+    }
+    .wave {
+      display: grid;
+      grid-template-columns: repeat(44, 1fr);
+      gap: 0.32vw;
+      align-items: center;
+      height: 23vh;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 2vh;
+    }
+    .wave i {
+      display: block;
+      height: var(--h);
+      background: linear-gradient(180deg, var(--cyan), var(--green));
+      transform-origin: center;
+      animation: vu 2.4s ease-in-out infinite;
+      animation-delay: calc(var(--i) * -42ms);
+    }
+    .subtitle-strip {
+      margin-top: 4vh;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 1.6vh 1vw;
+      font-size: clamp(18px, 1.6vw, 30px);
+      font-weight: 800;
+      position: relative;
+      overflow: hidden;
+    }
+    .subtitle-strip::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(246,239,225,0.18), transparent);
+      transform: translateX(-105%);
+    }
+    .slide.active .subtitle-strip::before {
+      animation: scan-line 2.2s ease-in-out 360ms both;
+    }
+    .subtitle-strip span {
+      display: inline-block;
+      animation: none;
+    }
+    .slide.active .subtitle-strip span {
+      animation: subtitle-cue 2.6s cubic-bezier(.2,.8,.1,1) 420ms both;
+    }
+    .tts-output-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.8vw;
+      margin-top: 2.2vh;
+    }
+    .tts-output {
+      border: 2px solid var(--ink);
+      background: rgba(246,239,225,0.82);
+      padding: 1.2vh 0.85vw;
+      min-height: 13vh;
+      box-shadow: 5px 5px 0 rgba(17,17,15,0.08);
+    }
+    .tts-output b {
+      display: block;
+      color: var(--red);
+      font-size: clamp(14px, 1vw, 19px);
+      margin-bottom: 0.7vh;
+    }
+    .tts-output span {
+      display: block;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.76vw, 14px);
+      line-height: 1.45;
+    }
+    .tts-flow-board {
+      background: rgba(255,255,255,0.38);
+      box-shadow: 16px 16px 0 rgba(17,17,15,0.10);
+      padding: 2.3vh 1.4vw;
+      margin-top: 2.6vh;
+    }
+    .tts-flow {
+      display: grid;
+      grid-template-columns: 1fr 22px 1fr 22px 1fr 22px 1fr;
+      gap: 0.65vw;
+      align-items: stretch;
+    }
+    .tts-flow-step {
+      border: 2px solid var(--ink);
+      background: rgba(246,239,225,0.86);
+      box-shadow: 5px 5px 0 rgba(17,17,15,0.08);
+      padding: 1.2vh 0.8vw;
+      min-height: 18vh;
+    }
+    .tts-flow-step small {
+      display: block;
+      color: var(--red);
+      font-family: var(--mono);
+      font-weight: 900;
+      margin-bottom: 0.7vh;
+    }
+    .tts-flow-step b {
+      display: block;
+      font-size: clamp(16px, 1.1vw, 22px);
+      line-height: 1.16;
+      margin-bottom: 0.8vh;
+    }
+    .tts-flow-step p {
+      color: var(--muted);
+      font-size: clamp(11px, 0.82vw, 15px);
+      line-height: 1.45;
+      margin: 0;
+    }
+    .tts-flow-step.output {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .tts-flow-step.output p { color: rgba(246,239,225,0.76); }
+    .tts-flow-arrow {
+      align-self: center;
+      height: 4px;
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--cyan));
+      position: relative;
+    }
+    .tts-flow-arrow::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+      width: 12px;
+      height: 12px;
+      border-top: 4px solid var(--cyan);
+      border-right: 4px solid var(--cyan);
+    }
+    .tts-provider-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.9vw;
+      margin-top: 1.5vh;
+    }
+    .tts-provider-row div {
+      border: 1px solid rgba(17,17,15,0.24);
+      background: rgba(255,255,255,0.45);
+      padding: 0.9vh 0.75vw;
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.72vw, 13px);
+      color: var(--muted);
+    }
+    .tts-provider-row b {
+      display: block;
+      color: var(--red);
+      font-family: var(--sans);
+      font-size: clamp(12px, 0.88vw, 16px);
+      margin-bottom: 0.3vh;
+    }
+    .render-flow-board {
+      height: 64vh;
+      background: rgba(255,255,255,0.42);
+      box-shadow: 16px 16px 0 rgba(17,17,15,0.10);
+      padding: 1.75vh 1.35vw 1.7vh;
+      margin-top: 1vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 1.35vh;
+    }
+    .render-flow-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75vw;
+    }
+    .render-flow-card {
+      border: 2px solid var(--ink);
+      background: rgba(246,239,225,0.92);
+      padding: 1.25vh 0.92vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      min-height: 16vh;
+      box-shadow: 7px 7px 0 rgba(17,17,15,0.13);
+    }
+    .render-flow-card.output {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+      box-shadow: 5px 5px 0 rgba(255,91,31,0.22);
+    }
+    .render-flow-card small {
+      font-family: var(--mono);
+      color: var(--red);
+      font-size: clamp(10px, 0.68vw, 12px);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .render-flow-card.output small { color: var(--yellow); }
+    .render-flow-card b {
+      display: block;
+      font-size: clamp(18px, 1.18vw, 24px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin-top: 0.85vh;
+    }
+    .render-flow-card p {
+      margin: 0.65vh 0 0;
+      color: var(--muted);
+      font-size: clamp(11px, 0.78vw, 14px);
+      line-height: 1.38;
+    }
+    .render-flow-card.output p { color: rgba(246,239,225,0.74); }
+    .remotion-module {
+      border: 2px solid var(--ink);
+      background:
+        linear-gradient(90deg, rgba(231,51,35,0.09), transparent 28%, transparent 74%, rgba(0,137,167,0.12)),
+        rgba(246,239,225,0.74);
+      padding: 1.55vh 1vw 1.25vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 1vh;
+      min-height: 42vh;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+    }
+    .remotion-module-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1vw;
+      border-bottom: 1px solid rgba(17,17,15,0.24);
+      padding-bottom: 0.9vh;
+    }
+    .remotion-module-head b {
+      font-size: clamp(19px, 1.45vw, 29px);
+      letter-spacing: -0.04em;
+    }
+    .remotion-module-head span {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.72vw, 13px);
+    }
+    .render-scene-plan {
+      display: grid;
+      grid-template-columns: 0.7fr 1fr 0.8fr 1.55fr 1.45fr 0.75fr;
+      gap: 0.5vw;
+      align-items: end;
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.76vw, 14px);
+      color: var(--muted);
+    }
+    .render-scene-plan span {
+      position: relative;
+      border: 2px solid rgba(17,17,15,0.38);
+      background: rgba(255,255,255,0.46);
+      padding: 1vh 0.65vw;
+      min-height: var(--h);
+      display: flex;
+      align-items: end;
+      box-shadow: 4px 4px 0 rgba(17,17,15,0.07);
+    }
+    .render-scene-plan span::before {
+      content: attr(data-scene);
+      position: absolute;
+      left: 0.62vw;
+      top: 0.75vh;
+      color: var(--red);
+      font-size: clamp(9px, 0.62vw, 11px);
+      font-weight: 900;
+    }
+    .render-scene-plan span:nth-child(4) {
+      background: rgba(0,137,167,0.14);
+      border-color: rgba(0,137,167,0.42);
+      color: var(--ink);
+      font-weight: 800;
+    }
+    .remotion-timeline {
+      position: relative;
+      display: grid;
+      grid-template-columns: 0.7fr 1fr 0.8fr 1.55fr 1.45fr 0.75fr;
+      gap: 0.5vw;
+      align-items: start;
+      padding-top: 1.05vh;
+      font-family: var(--mono);
+      font-size: clamp(9px, 0.68vw, 12px);
+      color: var(--muted);
+    }
+    .remotion-timeline::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0.3vh;
+      height: 3px;
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--cyan), var(--green));
+      box-shadow: 0 1px 0 rgba(17,17,15,0.18);
+    }
+    .remotion-timeline span {
+      position: relative;
+      padding-top: 0.55vh;
+    }
+    .remotion-timeline span::before {
+      content: "";
+      position: absolute;
+      top: -0.55vh;
+      left: 0;
+      width: 2px;
+      height: 1vh;
+      background: var(--ink);
+    }
+    .vu-meter {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 0.7vw;
+      align-items: end;
+      height: 32vh;
+      padding: 2vh 1.2vw;
+      border: 2px solid var(--ink);
+      background: var(--ink);
+    }
+    .vu-meter i {
+      height: var(--h);
+      background: var(--yellow);
+      animation: vu 2s ease-in-out infinite;
+      animation-delay: calc(var(--i) * -80ms);
+    }
+
+    .edit-suite {
+      position: relative;
+      height: 53vh;
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.4);
+      box-shadow: 16px 16px 0 rgba(17,17,15,0.10);
+      padding: 3vh 2vw;
+    }
+    .film {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.7vw;
+      height: 27vh;
+      align-items: end;
+    }
+    .clip {
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      min-height: var(--h);
+      padding: 1.1vh 0.75vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-weight: 800;
+      box-shadow: 6px 6px 0 rgba(17,17,15,0.08);
+    }
+    .clip.current {
+      border-color: var(--cyan);
+      background:
+        linear-gradient(180deg, rgba(0,137,167,0.10), rgba(246,239,225,0.88) 34%),
+        var(--paper);
+      box-shadow: 6px 6px 0 rgba(0,137,167,0.16);
+    }
+    .clip small { color: var(--muted); font-family: var(--mono); font-weight: 500; }
+    .timeline-ruler {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.7vw;
+      margin-top: 1.5vh;
+      font-family: var(--mono);
+      color: var(--muted);
+      font-size: clamp(10px, 0.72vw, 13px);
+    }
+    .timeline-ruler span {
+      border-top: 2px solid var(--line-strong);
+      padding-top: 0.65vh;
+      position: relative;
+    }
+    .timeline-ruler span::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: -5px;
+      width: 2px;
+      height: 8px;
+      background: var(--line-strong);
+    }
+    .timeline-tags {
+      display: flex;
+      gap: 0.7vw;
+      margin-top: 2vh;
+      flex-wrap: wrap;
+    }
+    .pill {
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      padding: 0.7vh 0.8vw;
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.76vw, 14px);
+      box-shadow: 4px 4px 0 rgba(17,17,15,0.10);
+    }
+
+    .press-kit {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 3vw;
+      align-items: center;
+    }
+    .publish-flow-vertical {
+      position: relative;
+      display: grid;
+      gap: 1.05vh;
+      margin-top: 2.2vh;
+      padding-left: 1.45vw;
+    }
+    .publish-flow-vertical::before {
+      content: "";
+      position: absolute;
+      left: 0.45vw;
+      top: 1.8vh;
+      bottom: 1.8vh;
+      width: 4px;
+      background: linear-gradient(180deg, var(--red), var(--yellow), var(--cyan), var(--green));
+      box-shadow: 2px 0 0 rgba(17,17,15,0.15);
+      transform-origin: top center;
+    }
+    .slide.active .publish-flow-vertical::before {
+      animation: trace-line 1.1s cubic-bezier(.2,.8,.1,1) 180ms both;
+    }
+    .publish-flow-step {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.8vw;
+      align-items: start;
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.52);
+      padding: 1.05vh 0.9vw 1.05vh 0.75vw;
+      box-shadow: 6px 6px 0 rgba(17,17,15,0.08);
+      opacity: 0;
+    }
+    .publish-flow-step.pack {
+      background: var(--ink);
+      color: var(--paper);
+      box-shadow: 7px 7px 0 rgba(231,51,35,0.38);
+    }
+    .slide.active .publish-flow-step {
+      animation: node-on 520ms cubic-bezier(.2,.8,.1,1) both;
+      animation-delay: calc(var(--i, 0) * 160ms + 250ms);
+    }
+    .publish-flow-step::before {
+      content: "";
+      position: absolute;
+      left: calc(-1.45vw - 5px);
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0.9vw;
+      min-width: 14px;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      border: 3px solid var(--ink);
+      background: var(--paper);
+      z-index: 2;
+    }
+    .publish-flow-step.pack::before { background: var(--red); }
+    .publish-flow-step small {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.2vw;
+      min-width: 34px;
+      aspect-ratio: 1;
+      border: 2px solid currentColor;
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-weight: 900;
+      font-size: clamp(10px, 0.7vw, 13px);
+      color: var(--red);
+      background: rgba(246,239,225,0.70);
+    }
+    .publish-flow-step.pack small {
+      color: var(--yellow);
+      background: rgba(246,239,225,0.10);
+    }
+    .publish-flow-step b {
+      display: block;
+      font-size: clamp(16px, 1.18vw, 23px);
+      line-height: 1.08;
+      margin-bottom: 0.45vh;
+    }
+    .publish-flow-step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(11px, 0.78vw, 14px);
+      line-height: 1.42;
+    }
+    .publish-flow-step.pack p { color: rgba(246,239,225,0.76); }
+    .folder {
+      position: relative;
+      min-height: 58vh;
+      margin-top: 5.5vh;
+      background: #e7c15d;
+      border: 2px solid var(--ink);
+      box-shadow: 18px 18px 0 rgba(17,17,15,0.13);
+      padding: 5vh 2vw 2vh;
+      font-family: var(--mono);
+    }
+    .folder::before {
+      content: "publish/YYYY-MM-DD";
+      position: absolute;
+      left: -2px;
+      top: -5.2vh;
+      height: 5.2vh;
+      min-width: 22vw;
+      background: #e7c15d;
+      border: 2px solid var(--ink);
+      border-bottom: 0;
+      padding: 1.2vh 1vw;
+      font-weight: 900;
+    }
+    .folder::after {
+      content: "pack 输出";
+      position: absolute;
+      right: 1.2vw;
+      top: 1.35vh;
+      font-family: var(--sans);
+      font-weight: 900;
+      color: rgba(17,17,15,0.54);
+      letter-spacing: 0.04em;
+    }
+    .folder-tree {
+      position: relative;
+      display: grid;
+      gap: 0.35vh;
+      background: rgba(246,239,225,0.28);
+      border: 1px solid rgba(17,17,15,0.20);
+      padding: 1.15vh 0.9vw 1.2vh;
+    }
+    .tree-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 1vw;
+      min-height: 3.9vh;
+      padding: 0.45vh 0.55vw;
+      font-size: clamp(12px, 0.9vw, 17px);
+      opacity: 0;
+    }
+    .tree-row.dir {
+      margin-top: 0.3vh;
+      font-weight: 900;
+      color: var(--ink);
+    }
+    .tree-row.file {
+      background: rgba(255,255,255,0.48);
+      border: 1px solid rgba(17,17,15,0.16);
+    }
+    .tree-row .name::before {
+      display: inline-block;
+      width: 1.5em;
+      color: rgba(17,17,15,0.42);
+    }
+    .tree-row.dir .name::before { content: "▸"; color: var(--red); }
+    .tree-row.file .name::before { content: "└"; }
+    .tree-row.l1 { padding-left: 1.15vw; }
+    .tree-row.l2 { padding-left: 2.45vw; }
+    .tree-row.l2::before {
+      content: "";
+      position: absolute;
+      left: 1.42vw;
+      top: -0.45vh;
+      bottom: -0.45vh;
+      width: 1px;
+      background: rgba(17,17,15,0.24);
+    }
+    .tree-row .meta {
+      color: rgba(17,17,15,0.52);
+      font-size: clamp(10px, 0.72vw, 13px);
+      font-weight: 800;
+      text-align: right;
+    }
+    .slide.active .folder .tree-row {
+      animation: file-drop 380ms cubic-bezier(.2,.8,.1,1) both;
+      animation-delay: calc(var(--i, 0) * 90ms + 280ms);
+    }
+    .switchboard {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1vw;
+    }
+    .switch {
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.48);
+      padding: 2vh 1.1vw;
+      min-height: 18vh;
+      box-shadow: 8px 8px 0 rgba(17,17,15,0.08);
+    }
+    .switch b { display: block; font-size: clamp(18px, 1.35vw, 27px); margin-bottom: 1vh; }
+    .switch span { color: var(--muted); font-family: var(--mono); }
+
+    .clock-room {
+      display: grid;
+      grid-template-columns: 0.78fr 1.22fr;
+      gap: 3.2vw;
+      align-items: center;
+    }
+    .clock {
+      position: relative;
+      width: min(29vw, 42vh);
+      aspect-ratio: 1;
+      border: 7px solid var(--ink);
+      border-radius: 50%;
+      background: rgba(255,255,255,0.30);
+      box-shadow: 12px 12px 0 rgba(17,17,15,0.08);
+      margin: auto;
+      opacity: 0.86;
+    }
+    .clock::before, .clock::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 50%;
+      width: 5px;
+      background: var(--ink);
+      transform-origin: bottom;
+    }
+    .clock::before { height: 34%; transform: rotate(252deg); opacity: 0.58; }
+    .clock::after { height: 44%; background: var(--red); transform: rotate(30deg); opacity: 0.72; }
+    .clock .time {
+      position: absolute;
+      left: 50%;
+      top: 63%;
+      transform: translateX(-50%);
+      font-family: var(--mono);
+      font-size: clamp(18px, 2vw, 34px);
+      font-weight: 900;
+      color: var(--red);
+    }
+    .log-paper {
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.5);
+      padding: 2.5vh 1.4vw;
+      box-shadow: 12px 12px 0 rgba(17,17,15,0.10);
+      font-family: var(--mono);
+      line-height: 1.65;
+      font-size: clamp(12px, 0.92vw, 17px);
+    }
+    .ops-note {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75vw;
+      margin-top: 1.5vh;
+    }
+    .ops-note div {
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.48);
+      padding: 1.05vh 0.8vw;
+      font-size: clamp(11px, 0.82vw, 15px);
+      line-height: 1.35;
+      box-shadow: 5px 5px 0 rgba(17,17,15,0.08);
+    }
+    .ops-note b {
+      display: block;
+      color: var(--red);
+      margin-bottom: 0.45vh;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.1vw;
+      margin-top: 5vh;
+    }
+    .demo-card {
+      min-height: 30vh;
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.46);
+      padding: 2vh 1.1vw;
+      box-shadow: 9px 9px 0 rgba(17,17,15,0.09);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .demo-card small { color: var(--red); font-family: var(--mono); }
+    .demo-card b { font-size: clamp(22px, 1.65vw, 32px); line-height: 1.16; }
+    .live-demo {
+      margin-top: 4vh;
+    }
+    .live-demo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.2vw;
+    }
+    .live-demo-card {
+      position: relative;
+      border: 2px solid var(--ink);
+      background: rgba(246,239,225,0.78);
+      box-shadow: 9px 9px 0 rgba(17,17,15,0.09);
+      padding: 1.7vh 1vw;
+      min-height: 34vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .live-demo-card::after {
+      content: "";
+      position: absolute;
+      right: -1.05vw;
+      top: 50%;
+      width: 1.05vw;
+      height: 3px;
+      background: var(--ink);
+    }
+    .live-demo-card:last-child::after { display: none; }
+    .live-demo-card small {
+      display: block;
+      font-family: var(--mono);
+      color: var(--red);
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: clamp(10px, 0.7vw, 13px);
+      margin-bottom: 1vh;
+    }
+    .live-demo-card b {
+      display: block;
+      font-size: clamp(24px, 1.75vw, 34px);
+      line-height: 1.08;
+    }
+    .live-demo-card p {
+      color: var(--muted);
+      font-size: clamp(12px, 0.86vw, 15px);
+      line-height: 1.45;
+      margin-top: 1.1vh;
+    }
+    .live-demo-card .mono {
+      margin-top: 1vh;
+      padding-top: 1vh;
+      border-top: 1px solid var(--line-strong);
+      color: var(--muted);
+      font-size: clamp(9px, 0.65vw, 12px);
+      line-height: 1.36;
+    }
+    .live-proof {
+      grid-column: 1 / -1;
+      margin-top: 1.3vh;
+      border: 2px solid var(--ink);
+      background: var(--yellow);
+      box-shadow: 8px 8px 0 rgba(17,17,15,0.10);
+      padding: 1.2vh 1vw;
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.74vw, 14px);
+      font-weight: 900;
+      line-height: 1.42;
+    }
+    .gap-board {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1vw;
+      margin-top: 4vh;
+    }
+    .gap-card {
+      min-height: 21vh;
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.46);
+      padding: 1.7vh 1vw;
+      box-shadow: 8px 8px 0 rgba(17,17,15,0.08);
+    }
+    .gap-card small {
+      display: block;
+      color: var(--red);
+      font-family: var(--mono);
+      margin-bottom: 1vh;
+    }
+    .gap-card b {
+      display: block;
+      font-size: clamp(18px, 1.35vw, 25px);
+      margin-bottom: 0.9vh;
+    }
+    .gap-card p {
+      color: var(--muted);
+      font-size: clamp(12px, 0.88vw, 16px);
+      line-height: 1.45;
+    }
+    .collection-grid {
+      display: grid;
+      grid-template-columns: 0.88fr 1.12fr;
+      gap: 3vw;
+      align-items: center;
+    }
+    .source-mini {
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.48);
+      padding: 2vh 1.2vw;
+      box-shadow: 9px 9px 0 rgba(17,17,15,0.09);
+      margin-top: 2vh;
+    }
+    .source-mini h3 {
+      font-size: clamp(18px, 1.35vw, 26px);
+      margin-bottom: 1.2vh;
+    }
+    .source-mini .line {
+      display: flex;
+      justify-content: space-between;
+      gap: 1vw;
+      padding: 0.82vh 0;
+      border-top: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.78vw, 14px);
+    }
+    .source-mini .line span:last-child {
+      color: var(--muted);
+      text-align: right;
+    }
+    .rule-stack {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1vw;
+      margin-top: 2vh;
+    }
+    .rule-card {
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.46);
+      padding: 1.5vh 1vw;
+      box-shadow: 7px 7px 0 rgba(17,17,15,0.08);
+      min-height: 18vh;
+    }
+    .rule-card b {
+      display: block;
+      font-size: clamp(17px, 1.22vw, 24px);
+      margin-bottom: 1vh;
+    }
+    .rule-card p {
+      color: var(--muted);
+      font-size: clamp(12px, 0.85vw, 15px);
+      line-height: 1.45;
+    }
+    .selection-lab {
+      margin-top: 2.8vh;
+      background:
+        linear-gradient(90deg, rgba(231,51,35,0.08), transparent 26%, transparent 78%, rgba(0,137,167,0.10)),
+        rgba(255,255,255,0.38);
+      box-shadow: 16px 16px 0 rgba(17,17,15,0.10);
+      padding: 2.2vh 1.5vw;
+    }
+    .selection-flow {
+      display: grid;
+      grid-template-columns: 1.15fr auto 0.9fr auto 1.35fr auto 1.05fr;
+      gap: 0.85vw;
+      align-items: stretch;
+    }
+    .flow-panel {
+      border: 2px solid var(--ink);
+      background: rgba(246,239,225,0.78);
+      padding: 1.4vh 0.95vw;
+      min-height: 35vh;
+      box-shadow: 7px 7px 0 rgba(17,17,15,0.10);
+    }
+    .slide.active .selection-flow .flow-panel,
+    .slide.active .selection-flow .flow-arrow {
+      animation: flow-step 430ms cubic-bezier(.2,.8,.1,1) both;
+      animation-delay: calc(var(--i, 0) * 160ms + 180ms);
+    }
+    .flow-panel h3 {
+      font-size: clamp(19px, 1.35vw, 27px);
+      margin-bottom: 1vh;
+    }
+    .flow-panel small {
+      display: block;
+      color: var(--red);
+      font-family: var(--mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.7vh;
+      font-size: clamp(9px, 0.66vw, 12px);
+    }
+    .flow-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.8vw;
+      border-top: 1px solid var(--line-strong);
+      padding: 0.8vh 0;
+      font-family: var(--mono);
+      font-size: clamp(9px, 0.68vw, 12px);
+      color: var(--muted);
+    }
+    .flow-line b {
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: clamp(12px, 0.9vw, 16px);
+    }
+    .flow-arrow {
+      align-self: center;
+      width: 3vw;
+      height: 4px;
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--cyan));
+      position: relative;
+    }
+    .flow-arrow::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+      width: 12px;
+      height: 12px;
+      border-top: 4px solid var(--cyan);
+      border-right: 4px solid var(--cyan);
+    }
+    .score-gate {
+      background: var(--ink);
+      color: var(--paper);
+      box-shadow: 8px 8px 0 var(--red);
+    }
+    .score-gate h3,
+    .score-gate .flow-line b { color: var(--paper); }
+    .score-gate .flow-line {
+      border-top-color: rgba(246,239,225,0.20);
+      color: rgba(246,239,225,0.72);
+    }
+    .selected-list {
+      display: grid;
+      gap: 0.8vh;
+      margin-top: 1.1vh;
+    }
+    .selected-list div {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(17,17,15,0.20);
+      background: rgba(255,255,255,0.42);
+      padding: 0.75vh 0.65vw;
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.7vw, 13px);
+    }
+    .selected-list div::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(231,51,35,0.20), rgba(240,180,41,0.24), rgba(0,137,167,0.18));
+      transform: scaleX(0);
+      transform-origin: left center;
+      z-index: 0;
+    }
+    .selected-list div span,
+    .selected-list div b {
+      position: relative;
+      z-index: 1;
+    }
+    .slide.active .selected-list div::before {
+      animation: score-fill 900ms cubic-bezier(.2,.8,.1,1) both;
+      animation-delay: calc(var(--i, 0) * 180ms + 880ms);
+    }
+    .feedback-row {
+      margin-top: 1.4vh;
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.50);
+      padding: 1vh 0.85vw;
+      font-size: clamp(12px, 0.88vw, 15px);
+      box-shadow: 5px 5px 0 rgba(17,17,15,0.08);
+    }
+    .feedback-row b { color: var(--red); }
+    .loop-stage {
+      position: relative;
+      min-height: 55vh;
+      margin-top: 3vh;
+      border: 2px solid var(--ink);
+      background:
+        linear-gradient(90deg, rgba(231,51,35,0.08), transparent 24%, transparent 76%, rgba(0,137,167,0.10)),
+        rgba(255,255,255,0.36);
+      box-shadow: 16px 16px 0 rgba(17,17,15,0.10);
+      overflow: hidden;
+    }
+    .loop-stage::before {
+      content: "";
+      position: absolute;
+      left: 14%;
+      right: 14%;
+      top: 50%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--green), var(--cyan));
+    }
+    .loop-node {
+      position: absolute;
+      width: 15vw;
+      min-height: 15vh;
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      padding: 1.6vh 1vw;
+      box-shadow: 8px 8px 0 rgba(17,17,15,0.10);
+      font-family: var(--mono);
+    }
+    .loop-node b {
+      display: block;
+      font-family: var(--sans);
+      font-size: clamp(19px, 1.5vw, 30px);
+      margin-bottom: 0.8vh;
+    }
+    .loop-node span {
+      color: var(--muted);
+      font-size: clamp(10px, 0.76vw, 14px);
+      line-height: 1.45;
+    }
+    .loop-node:nth-child(1) { left: 7%; top: 15%; transform: rotate(-1.5deg); }
+    .loop-node:nth-child(2) { right: 9%; top: 15%; transform: rotate(1deg); }
+    .loop-node:nth-child(3) { right: 13%; bottom: 13%; transform: rotate(-1deg); border-color: var(--cyan); }
+    .loop-node:nth-child(4) { left: 11%; bottom: 13%; transform: rotate(1.3deg); border-color: var(--red); }
+    .loop-core {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 23vw;
+      min-height: 18vh;
+      border: 4px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 2.2vh 1.4vw;
+      box-shadow: 12px 12px 0 var(--red);
+      text-align: center;
+    }
+    .loop-core b {
+      display: block;
+      font-size: clamp(24px, 2vw, 38px);
+      margin-bottom: 1vh;
+    }
+    .loop-core span {
+      font-family: var(--mono);
+      color: rgba(246,239,225,0.76);
+      font-size: clamp(11px, 0.84vw, 15px);
+      line-height: 1.5;
+    }
+    .next-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.2vw;
+      margin-top: 2vh;
+    }
+    .next-action {
+      border: 2px solid var(--ink);
+      background: rgba(255,255,255,0.5);
+      padding: 1.55vh 1.15vw;
+      box-shadow: 6px 6px 0 rgba(17,17,15,0.08);
+      font-size: clamp(13px, 0.98vw, 18px);
+      line-height: 1.35;
+    }
+    .next-action b {
+      display: block;
+      color: var(--red);
+      margin-bottom: 0.5vh;
+    }
+
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      .slide { overflow: auto; padding: 7vh 5vw 8vh; }
+      .split, .split.rev, .editor-board, .voice-booth, .press-kit, .clock-room, .collection-grid { grid-template-columns: 1fr; height: auto; }
+      .constraint-wall, .demo-grid, .gap-board, .detail-grid, .detail-grid.two, .source-board, .mini-flow, .rule-stack, .next-actions, .module-columns, .handoff-legend { grid-template-columns: 1fr 1fr; }
+      .handoff-flow, .module-band, .spine-lanes, .artifact-strip, .selection-flow, .live-demo-grid { grid-template-columns: 1fr; }
+      .handoff-arrow, .flow-arrow { width: 4px; height: 20px; justify-self: center; }
+      .live-demo-card::after { display: none; }
+      .contract-lane { grid-template-columns: 1fr; }
+      .contract-arrow { min-height: 18px; width: 3px; justify-self: center; }
+      .source-arrow { display: none; }
+      .process-map, .floorplan, .broadcast-stage, .slip-stage, .edit-suite { min-height: 560px; }
+      .live-demo { margin-top: 2vh; }
+      .live-demo-card { min-height: auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck">
+    <section class="slide active" data-title="开场">
+      <div class="topbar"><span>开场</span><span>01 / 12</span></div>
+      <div class="split">
+        <div data-left>
+          <div class="lower-third"><i class="live-dot"></i><span>Automation Practice</span></div>
+          <div style="height:5vh"></div>
+          <h1 class="headline sans cover-title">AI 日报<br>自动化生产线</h1>
+          <p class="lead">从多源信息采集到结构化内容生成、配音、视频渲染、发布包和 B 站自动上传，一条可重跑、可观察、可替换的本地生产线。</p>
+        </div>
+        <div class="broadcast-stage" data-rise style="--d:140ms">
+          <svg class="signal-path" viewBox="0 0 1000 700" preserveAspectRatio="none">
+            <path d="M130 150 C 300 310, 420 170, 520 350 S 750 540, 860 140" />
+            <path d="M130 555 C 300 360, 440 520, 520 350 S 700 220, 850 550" />
+          </svg>
+          <div class="stage-chip"><small>01</small><b>采集</b><small>GitHub / RSS / media</small></div>
+          <div class="stage-chip"><small>02</small><b>评分</b><small>selectionScores</small></div>
+          <div class="stage-chip"><small>03</small><b>内容包</b><small>schema-first script</small></div>
+          <div class="stage-chip"><small>04</small><b>配音 + 渲染</b><small>TTS / Remotion</small></div>
+          <div class="stage-chip"><small>05</small><b>发布</b><small>pack / upload</small></div>
+        </div>
+      </div>
+      <div class="ticker"><span>Sources -> Score -> ContentPack -> Voiceover -> Remotion -> publish/YYYY-MM-DD -> Bilibili</span><span>Sources -> Score -> ContentPack -> Voiceover -> Remotion -> publish/YYYY-MM-DD -> Bilibili</span></div>
+      <div class="page-mark">开场</div>
+    </section>
+
+    <section class="slide" data-title="目标">
+      <div class="topbar"><span>目标约束</span><span>02 / 12</span></div>
+      <div data-left>
+        <div class="kicker">稳定日更的约束</div>
+        <h2 class="headline medium">每天产出一条可发布视频</h2>
+      </div>
+      <div class="constraint-wall">
+        <div class="note" style="--r:-1.6deg;--delay:0s" data-rise><h3>输入会变</h3><p>RSS、网页、GitHub 页面、API 都可能变化。<br><code>collect-emergency-daily.ts</code></p></div>
+        <div class="note" style="--r:1.2deg;--delay:.3s" data-rise><h3>质量要能解释</h3><p>每天只选几条，要能看到加分、扣分和历史去重。<br><code>selectionScores</code></p></div>
+        <div class="note" style="--r:-.8deg;--delay:.6s" data-rise><h3>生成要被约束</h3><p>LLM 输出必须过 schema，事实和来源由工程控制。<br><code>ContentPackDraftSchema</code></p></div>
+        <div class="note" style="--r:1.8deg;--delay:.9s" data-rise><h3>发布要可复核</h3><p>成片、封面、标题、简介、来源链接统一落盘。<br><code>publish/YYYY-MM-DD</code></p></div>
+      </div>
+      <div class="ticker"><span>可发布性 = 边界清晰 + 产物落盘 + 失败可查 · 可发布性 = 边界清晰 + 产物落盘 + 失败可查 · </span><span>可发布性 = 边界清晰 + 产物落盘 + 失败可查 · 可发布性 = 边界清晰 + 产物落盘 + 失败可查 · </span></div>
+      <div class="page-mark">目标</div>
+    </section>
+
+    <section class="slide" data-title="架构">
+      <div class="topbar"><span>系统架构</span><span>03 / 12</span></div>
+      <div data-left>
+        <div class="kicker">运行时主链路</div>
+        <h2 class="headline medium wide">本地编排，外部能力只在 adapter 边界接入</h2>
+        <p class="lead small-lead">Web、CLI 和定时任务只是不同入口，最终都会进入同一条本地 pipeline。MiMo、火山 TTS 和 social-auto-upload 都通过 adapter 接入，主链路只处理稳定数据结构和本地产物。</p>
+        <div class="entry-strip" data-rise style="--d:80ms">
+          <strong>边界</strong>
+          <code>Entry: Web / CLI / launchd</code>
+          <code>Sources: GitHub / RSS / history</code>
+          <code>Providers: LLM / TTS / SAU</code>
+          <code>Artifacts: job / audio / render / publish</code>
+        </div>
+      </div>
+      <div class="spine-board" data-rise style="--d:120ms">
+        <div class="spine-lanes">
+          <div class="spine-node" data-step="01" style="--step-index:1"><span class="side-chip">Entry</span><h3>触发</h3><p>Web、CLI、<code>launchd</code> 进入同一条 pipeline。</p></div>
+          <div class="spine-node" data-step="02" style="--step-index:2"><span class="side-chip">Sources</span><h3>采集</h3><p>GitHub、RSS、网页和历史任务进入候选池。</p></div>
+          <div class="spine-node" data-step="03" style="--step-index:3"><h3>评分</h3><p><code>selectionScores</code> 解释入选和扣分。</p></div>
+          <div class="spine-node" data-step="04" style="--step-index:4"><span class="side-chip">LLM provider</span><h3>内容生成</h3><p>LLM 只输出 <code>ContentPackDraft</code>。</p></div>
+          <div class="spine-node" data-step="05" style="--step-index:5"><span class="side-chip">TTS provider</span><h3>配音</h3><p>产出音频、字幕、<code>durationMs</code>。</p></div>
+          <div class="spine-node" data-step="06" style="--step-index:6"><h3>渲染</h3><p>Remotion 消费 <code>AiDailyVideoProps</code>。</p></div>
+          <div class="spine-node" data-step="07" style="--step-index:7"><h3>打包</h3><p>成片、封面、标题、简介进入发布包。</p></div>
+          <div class="spine-node" data-step="08" style="--step-index:8"><span class="side-chip">SAU</span><h3>上传</h3><p><code>publish:auto</code> 发布到 B 站并记录结果。</p></div>
+        </div>
+        <div class="artifact-strip">
+          <div><b>job JSON</b>stageEvents / selectionScores</div>
+          <div><b>generated-audio</b>audio / captions / segments</div>
+          <div><b>generated-renders</b>MP4 / cover still</div>
+          <div><b>publish/YYYY-MM-DD</b>platform assets / result</div>
+        </div>
+      </div>
+      <div class="ticker"><span>触发 -> 采集 -> 评分 -> 内容生成 -> 配音 -> 渲染 -> 发布包 -> B 站发布 · </span><span>触发 -> 采集 -> 评分 -> 内容生成 -> 配音 -> 渲染 -> 发布包 -> B 站发布 · </span></div>
+      <div class="page-mark">架构</div>
+    </section>
+
+    <section class="slide" data-title="模块交接">
+      <div class="topbar"><span>模块交接</span><span>04 / 12</span></div>
+      <div data-left>
+        <div class="kicker">模块拆分规则</div>
+        <h2 class="headline medium wide">模块边界<br>与数据交接</h2>
+        <p class="lead small-lead">系统不使用一个大脚本串完整流程，而是按阶段拆模块、按产物交接。每一步只读取上一阶段输出，只写入自己的结果；哪里失败，就检查对应产物和日志。</p>
+      </div>
+      <div class="handoff-map" data-rise style="--d:120ms">
+        <div class="handoff-flow">
+          <div class="handoff-card">
+            <small>01 / packages/core</small>
+            <h3>采集评分</h3>
+            <p>采集 GitHub 和媒体源，归一化候选，输出可解释评分。</p>
+            <div class="handoff-meta">
+              <div>output: DailySnapshot</div>
+              <div>debug: selectionScores</div>
+            </div>
+          </div>
+          <div class="handoff-arrow"></div>
+          <div class="handoff-card featured">
+            <small>02 / apps/web providers</small>
+            <h3>内容生成</h3>
+            <p>LLM 只基于事实材料生成结构化内容字段。</p>
+            <div class="handoff-meta">
+              <div>output: ContentPack</div>
+              <div>guard: ContentPackDraftSchema</div>
+            </div>
+          </div>
+          <div class="handoff-arrow"></div>
+          <div class="handoff-card">
+            <small>03 / packages/video</small>
+            <h3>视频渲染</h3>
+            <p>Remotion 只消费视频参数和音频时间线。</p>
+            <div class="handoff-meta">
+              <div>input: AiDailyVideoProps</div>
+              <div>output: mp4 + cover</div>
+            </div>
+          </div>
+          <div class="handoff-arrow"></div>
+          <div class="handoff-card">
+            <small>04 / scripts</small>
+            <h3>发布执行</h3>
+            <p>发布脚本只消费发布包，不临时拼业务逻辑。</p>
+            <div class="handoff-meta">
+              <div>input: publish/YYYY-MM-DD</div>
+              <div>debug: publish-result.json</div>
+            </div>
+          </div>
+        </div>
+        <div class="handoff-legend">
+          <div><b>边界清楚</b>改选题、换模型、改模板、换上传工具时，不需要同时改整条链路。</div>
+          <div><b>产物可查</b>每个阶段都有落盘结果，排查时不用猜状态。</div>
+          <div><b>失败可重跑</b>从失败阶段重新执行，不必每天从头重来。</div>
+        </div>
+      </div>
+      <div class="ticker"><span>DailySnapshot -> ContentPack -> AiDailyVideoProps -> publish/YYYY-MM-DD · 阶段之间只通过明确产物交接</span><span>DailySnapshot -> ContentPack -> AiDailyVideoProps -> publish/YYYY-MM-DD · 阶段之间只通过明确产物交接</span></div>
+      <div class="page-mark">模块交接</div>
+    </section>
+
+    <section class="slide" data-title="采集评分">
+      <div class="topbar"><span>采集与评分</span><span>05 / 12</span></div>
+      <div data-left>
+        <div class="kicker">先合并候选，再评分筛选</div>
+        <h2 class="headline medium topic">选题不是热度排序，<br>而是适播性评分</h2>
+        <p class="lead small-lead"><code>collectEmergencyDaily()</code> 按来源独立降级；评分结果写入 <code>selectionScores</code>，后续可以直接查看每条内容为什么入选。</p>
+      </div>
+      <div class="selection-lab" data-rise style="--d:120ms">
+        <div class="selection-flow">
+          <div class="flow-panel" style="--i:0">
+            <small>01 / sources</small>
+            <h3>多源输入</h3>
+            <div class="flow-line"><b>GitHub</b><span>Trending / Search</span></div>
+            <div class="flow-line"><b>Media</b><span>RSS / 官方博客</span></div>
+            <div class="flow-line"><b>History</b><span>近 7 天任务</span></div>
+          </div>
+          <div class="flow-arrow" style="--i:1"></div>
+          <div class="flow-panel" style="--i:2">
+            <small>02 / normalize</small>
+            <h3>归一化</h3>
+            <div class="flow-line"><b>同 repo</b><span>合并 stars / topics</span></div>
+            <div class="flow-line"><b>同 URL</b><span>保留完整正文</span></div>
+            <div class="flow-line"><b>重复内容</b><span>历史扣分</span></div>
+          </div>
+          <div class="flow-arrow" style="--i:3"></div>
+          <div class="flow-panel score-gate" style="--i:4">
+            <small>03 / score</small>
+            <h3>评分阶段</h3>
+            <div class="flow-line"><b>GitHub</b><span>AI token + dev fit + burst</span></div>
+            <div class="flow-line"><b>Media</b><span>launch signal + impact + trust</span></div>
+            <div class="flow-line"><b>Debug</b><span>selectionScores + reason</span></div>
+          </div>
+          <div class="flow-arrow" style="--i:5"></div>
+          <div class="flow-panel" style="--i:6">
+            <small>04 / selected</small>
+            <h3>入选池</h3>
+            <div class="selected-list">
+              <div style="--i:0;--score:.96"><span>GitHub project</span><b>128.4</b></div>
+              <div style="--i:1;--score:.87"><span>Model release</span><b>116.7</b></div>
+              <div style="--i:2;--score:.76"><span>API update</span><b>102.1</b></div>
+            </div>
+            <div class="flow-line"><b>目标</b><span>GitHub 3 + Media 3</span></div>
+            <div class="flow-line"><b>最低可用</b><span>总数 ≥ 2 且两类都有</span></div>
+          </div>
+        </div>
+        <div class="feedback-row"><b>可解释性：</b>入选结果不是黑盒排序，而是由来源、归一化、历史去重和评分规则共同决定。</div>
+      </div>
+      <div class="ticker"><span>GitHub + Media + History -> normalized candidates -> selectionScores + reason + selectedCounts</span><span>GitHub + Media + History -> normalized candidates -> selectionScores + reason + selectedCounts</span></div>
+      <div class="page-mark">采集评分</div>
+    </section>
+
+    <section class="slide" data-title="LLM">
+      <div class="topbar"><span>内容生成</span><span>06 / 12</span></div>
+      <div data-left>
+        <div class="kicker">事实和状态由工程控制</div>
+        <h2 class="headline medium topic">LLM 生成<br>结构化内容包</h2>
+      </div>
+      <div class="llm-flow-board" data-rise style="--d:120ms">
+        <div class="llm-flow-main">
+          <div class="llm-flow-card">
+            <small>01 / facts</small>
+            <b>整理输入材料</b>
+            <p><code>FeedItem</code>、正文摘要、repo facts 和标题要求先由本地代码整理。</p>
+          </div>
+          <div class="llm-flow-arrow" style="--i:0"></div>
+          <div class="llm-flow-card provider">
+            <small>02 / provider</small>
+            <b>调用 LLM provider</b>
+            <p>模型由 <code>MIMO_CONTENT_MODEL</code> 配置；Gemini、OpenAI 保留同签名 adapter。</p>
+          </div>
+          <div class="llm-flow-arrow" style="--i:1"></div>
+          <div class="llm-flow-card schema">
+            <small>03 / gate</small>
+            <b>Zod schema 校验</b>
+            <p><code>ContentPackDraftSchema.parse()</code> 通过后，才允许进入下游。</p>
+          </div>
+          <div class="llm-flow-arrow" style="--i:2"></div>
+          <div class="llm-flow-card">
+            <small>04 / output</small>
+            <b>补齐 ContentPack</b>
+            <p>模型只返回内容字段；<code>id</code>、<code>kind</code>、<code>sourceMeta</code> 由工程侧补齐。</p>
+          </div>
+        </div>
+        <div class="llm-flow-detail">
+          <div class="schema-mini">
+            <b>ContentPackDraftSchema</b>
+            <code>{
+  title,
+  subtitle,
+  hookTitle,
+  spokenIntro,
+  spokenBody,
+  bulletPoints,
+  visualCard
+}</code>
+          </div>
+          <div class="fallback-branch">
+            <b>失败支路：deterministic fallback</b>
+            <p>provider 异常或 Zod parse 失败时，回退到 <code>buildFallbackContentPack()</code>，用事实材料生成最低可用稿。</p>
+          </div>
+        </div>
+      </div>
+      <div class="ticker"><span>MiMo provider 默认 · MIMO_CONTENT_MODEL 可配置 · Gemini/OpenAI adapter 保留 · Zod schema 校验 · deterministic fallback</span><span>MiMo provider 默认 · MIMO_CONTENT_MODEL 可配置 · Gemini/OpenAI adapter 保留 · Zod schema 校验 · deterministic fallback</span></div>
+      <div class="page-mark">内容生成</div>
+    </section>
+
+    <section class="slide" data-title="TTS">
+      <div class="topbar"><span>TTS 与字幕</span><span>07 / 12</span></div>
+      <div data-left>
+        <div class="kicker">TTS provider 处理流程</div>
+        <h2 class="headline medium topic">口播文本如何变成<br>视频时间线</h2>
+        <p class="lead small-lead"><code>synthesizeVoiceover()</code> 的职责是把口播文本转成三类下游产物：音频文件、字幕片段和 <code>durationMs</code>。火山 V3 主链路整段请求 sentence timing；文本分段逻辑位于本地 MOSS provider 内部。</p>
+      </div>
+      <div class="tts-flow-board" data-rise style="--d:120ms">
+        <div class="tts-flow">
+          <div class="tts-flow-step">
+            <small>01 / primary</small>
+            <b>优先调用火山 TTS</b>
+            <p>默认走 Volcengine V3 chunked API，整段文本发送给 provider，并请求 subtitle / sentence timing。</p>
+          </div>
+          <div class="tts-flow-arrow"></div>
+          <div class="tts-flow-step">
+            <small>02 / timing</small>
+            <b>解析时间线</b>
+            <p>优先使用 provider 返回的 sentence timing；如果缺失，再用文本长度估算兜底时长。</p>
+          </div>
+          <div class="tts-flow-arrow"></div>
+          <div class="tts-flow-step">
+            <small>03 / local fallback</small>
+            <b>本地 TTS 兜底分段</b>
+            <p>当 fallback provider 配置为 MOSS 时，在 provider 内部按强停顿符拆句，过长句再按软停顿符拆分。</p>
+          </div>
+          <div class="tts-flow-arrow"></div>
+          <div class="tts-flow-step output">
+            <small>04 / timeline</small>
+            <b>输出时间线</b>
+            <p><code>audio</code>、<code>segments</code>、<code>captions</code>、<code>durationMs</code> 落盘，Remotion 用 duration 换算 frames。</p>
+          </div>
+        </div>
+        <div class="tts-provider-row">
+          <div><b>Provider 选择</b>主 provider、重试、fallback 都由配置控制。</div>
+          <div><b>文件校验</b>渲染前确认音频文件存在，避免生成无声视频。</div>
+          <div><b>视频对齐</b>时长决定帧数，字幕片段决定字幕出现位置。</div>
+        </div>
+      </div>
+      <div class="ticker"><span>primary Volcengine -> sentence timing -> configurable fallback -> audio + segments + captions + durationMs -> Remotion frames</span><span>primary Volcengine -> sentence timing -> configurable fallback -> audio + segments + captions + durationMs -> Remotion frames</span></div>
+      <div class="page-mark">TTS</div>
+    </section>
+
+    <section class="slide" data-title="Remotion">
+      <div class="topbar"><span>视频渲染</span><span>08 / 12</span></div>
+      <div data-left>
+        <div class="kicker">Remotion 负责视频时间线</div>
+        <h2 class="headline medium">Remotion 把数据变成可播放时间线</h2>
+      </div>
+      <div class="render-flow-board" data-rise>
+        <div class="render-flow-grid">
+          <div class="render-flow-card">
+            <small>01 Input</small>
+            <b>ContentPacks</b>
+            <p>内容生成阶段先输出结构化内容包，视频层不重新判断选题和事实。</p>
+          </div>
+          <div class="render-flow-card">
+            <small>02 Props</small>
+            <b>buildAiDailyVideoProps()</b>
+            <p><code>AiDailyVideoProps</code> 是视频层唯一输入；模板组件只读 props 和音频路径。</p>
+          </div>
+          <div class="render-flow-card">
+            <small>03 Timeline</small>
+            <b>attach voiceovers + buildVideoPlan()</b>
+            <p><code>buildVideoPlan()</code> 把内容、配音和默认时长换算成 scene frames。</p>
+          </div>
+          <div class="render-flow-card output">
+            <small>04 Render</small>
+            <b>MP4 + 4:3 Cover</b>
+            <p>视频和封面分 composition 输出，封面不依赖第一帧截图。</p>
+          </div>
+        </div>
+        <div class="remotion-module">
+          <div class="remotion-module-head">
+            <b>Remotion Scene Plan</b>
+            <span>durationMs -> frames · captions -> subtitle timing</span>
+          </div>
+          <div class="render-scene-plan">
+            <span data-scene="S01" style="--h:9vh">brand</span>
+            <span data-scene="S02" style="--h:14vh">headline</span>
+            <span data-scene="S03" style="--h:11vh">github lead</span>
+            <span data-scene="S04-N" style="--h:22vh">github items</span>
+            <span data-scene="S05-N" style="--h:19vh">media items</span>
+            <span data-scene="S99" style="--h:12vh">outro</span>
+          </div>
+          <div class="remotion-timeline">
+            <span>0s</span>
+            <span>intro</span>
+            <span>lead</span>
+            <span>items</span>
+            <span>media</span>
+            <span>end</span>
+          </div>
+        </div>
+      </div>
+      <div class="ticker"><span>ContentPacks -> video props -> voiceover timeline -> Remotion scene plan -> MP4 + 4:3 cover</span><span>ContentPacks -> video props -> voiceover timeline -> Remotion scene plan -> MP4 + 4:3 cover</span></div>
+      <div class="page-mark">视频</div>
+    </section>
+
+    <section class="slide" data-title="发布">
+      <div class="topbar"><span>发布包</span><span>09 / 12</span></div>
+      <div class="press-kit">
+        <div data-left>
+          <div class="kicker">已经跑通的成果</div>
+          <h2 class="headline medium">生成发布包，<br>自动发布</h2>
+          <p class="lead small-lead"><code>publish:pack</code> 先做质量门禁，再把平台需要的所有资产固化到目录。<code>publish:auto</code> 只消费这个目录，避免上传时临时拼标题、简介和来源链接。</p>
+          <div class="publish-flow-vertical">
+            <div class="publish-flow-step" style="--i:0">
+              <small>01</small>
+              <div><b>quality gate</b><p>检查内容数量、媒体评分、<code>renderUrl</code> 和视频参数，失败就不进入发布。</p></div>
+            </div>
+            <div class="publish-flow-step pack" style="--i:1">
+              <small>02</small>
+              <div><b>pack</b><p>生成右侧目录：公共视频、4:3 封面、B 站标题、简介、标签、来源和调试信息。</p></div>
+            </div>
+            <div class="publish-flow-step" style="--i:2">
+              <small>03</small>
+              <div><b>upload</b><p><code>publish:auto</code> 检查登录态和文件，再调用 <code>sau upload-video</code> 上传 B 站。</p></div>
+            </div>
+            <div class="publish-flow-step" style="--i:3">
+              <small>04</small>
+              <div><b>result</b><p>写入 <code>publish-result.json</code>；重复执行时跳过已成功平台，除非传 <code>--force</code>。</p></div>
+            </div>
+          </div>
+          <div class="stacked-lines">
+            <div><span>默认平台</span><span>bilibili / ai-daily-bilibili / 分区 231</span></div>
+            <div><span>上传工具</span><span>优先使用 .local/social-auto-upload/.venv/bin/sau</span></div>
+          </div>
+        </div>
+        <div class="folder" data-rise>
+          <div class="folder-tree">
+            <div class="tree-row file l1" style="--i:0"><span class="name">YYYY-MM-DD.mp4</span><span class="meta">video</span></div>
+            <div class="tree-row file l1" style="--i:1"><span class="name">YYYY-MM-DD-cover.jpg</span><span class="meta">cover</span></div>
+            <div class="tree-row dir l1" style="--i:2"><span class="name">bilibili/</span><span class="meta">default</span></div>
+            <div class="tree-row file l2" style="--i:3"><span class="name">title.txt</span><span class="meta">title</span></div>
+            <div class="tree-row file l2" style="--i:4"><span class="name">description.md</span><span class="meta">desc</span></div>
+            <div class="tree-row file l2" style="--i:5"><span class="name">tags.txt</span><span class="meta">tags</span></div>
+            <div class="tree-row file l2" style="--i:6"><span class="name">source-links.md</span><span class="meta">audit</span></div>
+            <div class="tree-row file l2" style="--i:7"><span class="name">comment.txt</span><span class="meta">comment</span></div>
+            <div class="tree-row file l2" style="--i:8"><span class="name">job-summary.json</span><span class="meta">debug</span></div>
+            <div class="tree-row dir l1" style="--i:9"><span class="name">douyin/</span><span class="meta">optional</span></div>
+            <div class="tree-row file l2" style="--i:10"><span class="name">metadata files</span><span class="meta">disabled</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ticker"><span>quality gate -> pack: 公共视频/封面 + 平台文案 -> upload -> publish-result.json</span><span>quality gate -> pack: 公共视频/封面 + 平台文案 -> upload -> publish-result.json</span></div>
+      <div class="page-mark">发布</div>
+    </section>
+
+    <section class="slide" data-title="定时">
+      <div class="topbar"><span>定时任务</span><span>10 / 12</span></div>
+      <div class="clock-room">
+        <div class="clock" data-rise><div class="time">generate / publish</div></div>
+        <div data-left>
+          <div class="kicker">运行层保障</div>
+          <h2 class="headline medium">自动触发，<br>失败可定位</h2>
+          <p class="lead small-lead">运行层保障：按配置自动触发、同一天不重复跑、失败后能快速知道卡在哪一步。Web、CLI 和定时任务进入同一条 pipeline，所以排障入口也统一。</p>
+          <div class="log-paper" style="margin-top:3vh;padding:3.2vh 1.6vw;line-height:1.78">
+launchd generate -> run:daily -> job-YYYY-MM-DD.json<br>
+launchd publish  -> publish:auto --platform=bilibili -> publish-result.json<br>
+failure trace  -> stageEvents + auto-publish.log
+          </div>
+          <div class="ops-note">
+            <div><b>自动触发</b><code>launchd</code> 每天按安装配置启动生成和发布脚本。</div>
+            <div><b>失败定位</b>Web 后台看 job 状态，本地看 stageEvents 和日志。</div>
+            <div><b>防重</b><code>withRunLock(date)</code> 锁住同一天任务。</div>
+          </div>
+        </div>
+      </div>
+      <div class="ticker"><span>自动触发 · 防重复 · 可排障 · launchd + job JSON + stageEvents + publish-result.json</span><span>自动触发 · 防重复 · 可排障 · launchd + job JSON + stageEvents + publish-result.json</span></div>
+      <div class="page-mark">运行层</div>
+    </section>
+
+    <section class="slide" data-title="演示">
+      <div class="topbar"><span>现场演示</span><span>11 / 12</span></div>
+      <div data-left>
+        <div class="kicker">2-3 分钟现场展示</div>
+        <h2 class="headline medium">实践成果</h2>
+      </div>
+      <div class="live-demo" data-rise style="--d:120ms">
+        <div class="live-demo-grid">
+          <div class="live-demo-card"><small>01 / B 站</small><b>已发布视频</b><p>看成片观感、封面、标题、简介和播放互动数据。</p><div class="mono">platform output</div></div>
+          <div class="live-demo-card"><small>02 / Web 后台</small><b>任务状态</b><p>看当天 job、阶段事件、选题分数和发布结果。</p><div class="mono">job / stageEvents / selectionScores</div></div>
+          <div class="live-demo-card"><small>03 / 本地目录</small><b>发布包</b><p>看视频、封面、metadata、简介、标签和来源链接。</p><div class="mono">publish/YYYY-MM-DD/</div></div>
+        </div>
+        <div class="live-proof">同一个日期任务贯穿三处：平台页面证明“已发布”，Web 后台证明“流程跑通”，本地发布包证明“产物可复核”。</div>
+      </div>
+      <div class="ticker"><span>B 站页面 · Web 后台 · publish/YYYY-MM-DD/ · 三处看同一个发布任务</span><span>B 站页面 · Web 后台 · publish/YYYY-MM-DD/ · 三处看同一个发布任务</span></div>
+      <div class="page-mark">演示</div>
+    </section>
+
+    <section class="slide" data-title="后续优化">
+      <div class="topbar"><span>下一步</span><span>12 / 12</span></div>
+      <div data-left>
+        <div class="kicker">后续优化方向</div>
+        <h2 class="headline medium wide topic">TODO:<br>提升稳定性、质量</h2>
+        <p class="lead small-lead">适合个人或小团队快速迭代的本地生产线：低耦合、易排查、能替换 provider，也保留人工 gate。下一阶段重点是稳定部署、发布前质检和 B 站数据回流。</p>
+      </div>
+      <div class="loop-stage" data-rise style="--d:100ms;min-height:45vh;margin-top:2vh">
+        <div class="loop-node"><b>Produce</b><span>采集、评分、内容生成、配音、渲染</span></div>
+        <div class="loop-node"><b>Publish</b><span>发布包、标题、封面、简介、来源链接</span></div>
+        <div class="loop-node"><b>Measure</b><span>播放、点击、完播、收藏、评论</span></div>
+        <div class="loop-node"><b>Tune</b><span>调评分权重、标题策略、模板版本</span></div>
+        <div class="loop-core"><b>AI Daily Factory</b><span>从 Mac 上的自动化脚本，升级为稳定运行、可复盘、可调参的视频生成系统</span></div>
+      </div>
+      <div class="next-actions" data-rise style="--d:180ms">
+        <div class="next-action"><b>稳定运行</b>迁到云主机 / 小主机，用 systemd 定时；LLM / TTS provider 改为可切换配置。</div>
+        <div class="next-action"><b>发布质检</b>把选题、文案、封面、成片、字幕覆盖率和音频时长集中到一个审核入口。</div>
+        <div class="next-action"><b>数据回流</b>用 B 站播放、点击、完播、收藏和评论，调整选题评分、标题和封面策略。</div>
+      </div>
+      <div class="ticker"><span>稳定运行 · 发布质检 · 数据回流 · Produce -> Publish -> Measure -> Tune</span><span>稳定运行 · 发布质检 · 数据回流 · Produce -> Publish -> Measure -> Tune</span></div>
+      <div class="page-mark">迭代</div>
+    </section>
+  </main>
+
+  <div class="progress" id="progress"></div>
+
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    const progress = document.getElementById('progress');
+    let index = 0;
+    slides.forEach((slide, i) => {
+      const marker = slide.querySelector('.topbar span:last-child');
+      if (marker) marker.textContent = `${String(i + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
+    });
+
+    function show(next) {
+      index = Math.max(0, Math.min(slides.length - 1, next));
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === index);
+        if (i === index) {
+          slide.querySelectorAll('[data-rise], [data-left]').forEach((el) => {
+            el.style.animation = 'none';
+            void el.offsetHeight;
+            el.style.animation = '';
+          });
+        }
+      });
+      progress.style.setProperty('--p', ((index + 1) / slides.length) * 100);
+      history.replaceState(null, '', `#${index + 1}`);
+    }
+
+    function readHash() {
+      const n = Number(location.hash.slice(1));
+      if (Number.isFinite(n) && n >= 1 && n <= slides.length) index = n - 1;
+      show(index);
+    }
+
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') show(index + 1);
+      if (event.key === 'ArrowLeft' || event.key === 'PageUp') show(index - 1);
+      if (event.key === 'Home') show(0);
+      if (event.key === 'End') show(slides.length - 1);
+      if (event.key.toLowerCase() === 'f') document.documentElement.requestFullscreen?.();
+    });
+    window.addEventListener('hashchange', readHash);
+    readHash();
+  </script>
+</body>
+</html>
