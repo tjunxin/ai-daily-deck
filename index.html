@@ -1979,6 +1979,9 @@
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 1.2vw;
     }
+    .live-demo-grid.two-up {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
     .live-demo-card {
       position: relative;
       border: 2px solid var(--ink);
@@ -2249,6 +2252,94 @@
       box-shadow: 5px 5px 0 rgba(17,17,15,0.08);
     }
     .feedback-row b { color: var(--red); }
+    .next-direction {
+      position: relative;
+      min-height: 22vh;
+      margin-top: 1.8vh;
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 2vw;
+      align-items: center;
+      background:
+        radial-gradient(circle at 18% 42%, rgba(231,51,35,0.10), transparent 26%),
+        radial-gradient(circle at 82% 56%, rgba(0,137,167,0.10), transparent 28%);
+      border-top: 2px solid var(--line-strong);
+      border-bottom: 2px solid var(--line-strong);
+      padding: 1.8vh 1vw;
+    }
+    .direction-kicker {
+      display: block;
+      font-family: var(--mono);
+      color: var(--red);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: clamp(10px, 0.72vw, 13px);
+      margin-bottom: 0.8vh;
+      font-weight: 900;
+    }
+    .direction-copy b {
+      display: block;
+      font-size: clamp(28px, 2.45vw, 48px);
+      line-height: 1.02;
+      letter-spacing: 0;
+      max-width: 12ch;
+    }
+    .direction-copy p {
+      margin-top: 1.2vh;
+      color: var(--muted);
+      font-size: clamp(13px, 0.96vw, 18px);
+      line-height: 1.45;
+      max-width: 35ch;
+    }
+    .direction-orbit {
+      position: relative;
+      height: 20vh;
+      min-height: 150px;
+    }
+    .direction-orbit svg {
+      position: absolute;
+      inset: 8% 3% 4%;
+      width: 94%;
+      height: 82%;
+      overflow: visible;
+    }
+    .direction-orbit path {
+      fill: none;
+      stroke: var(--ink);
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-dasharray: 10 12;
+      opacity: 0.32;
+    }
+    .orbit-dot {
+      position: absolute;
+      width: clamp(82px, 6.5vw, 124px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 3px solid var(--ink);
+      background: var(--paper);
+      box-shadow: 8px 8px 0 rgba(17,17,15,0.10);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 1vh 0.6vw;
+      font-family: var(--mono);
+    }
+    .orbit-dot b {
+      display: block;
+      font-family: var(--sans);
+      font-size: clamp(16px, 1.18vw, 23px);
+      line-height: 1;
+    }
+    .orbit-dot span {
+      color: var(--muted);
+      font-size: clamp(9px, 0.68vw, 12px);
+      line-height: 1.2;
+      margin-top: 0.45vh;
+    }
+    .orbit-dot.run { left: 4%; top: 38%; border-color: var(--red); }
+    .orbit-dot.review { left: 42%; top: 5%; background: var(--yellow); }
+    .orbit-dot.learn { right: 4%; bottom: 8%; border-color: var(--cyan); }
     .loop-stage {
       position: relative;
       min-height: 55vh;
@@ -2260,6 +2351,18 @@
       box-shadow: 16px 16px 0 rgba(17,17,15,0.10);
       overflow: hidden;
     }
+    .loop-stage.compact {
+      min-height: 15vh;
+      margin-top: 1.6vh;
+      padding: 1.2vh 1vw;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.6vw;
+      align-items: center;
+      background: rgba(255,255,255,0.30);
+      box-shadow: 8px 8px 0 rgba(17,17,15,0.06);
+      opacity: 0.72;
+    }
     .loop-stage::before {
       content: "";
       position: absolute;
@@ -2268,6 +2371,10 @@
       top: 50%;
       height: 4px;
       background: linear-gradient(90deg, var(--red), var(--yellow), var(--green), var(--cyan));
+    }
+    .loop-stage.compact::before,
+    .loop-stage.compact .loop-core {
+      display: none;
     }
     .loop-node {
       position: absolute;
@@ -2278,6 +2385,25 @@
       padding: 1.6vh 1vw;
       box-shadow: 8px 8px 0 rgba(17,17,15,0.10);
       font-family: var(--mono);
+    }
+    .loop-stage.compact .loop-node {
+      position: relative;
+      width: auto;
+      min-height: 8vh;
+      padding: 1vh 0.75vw;
+      transform: none !important;
+      box-shadow: none;
+      background: rgba(246,239,225,0.66);
+    }
+    .loop-stage.compact .loop-node:not(:last-of-type)::after {
+      content: "->";
+      position: absolute;
+      right: -1vw;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-weight: 900;
     }
     .loop-node b {
       display: block;
@@ -2325,6 +2451,10 @@
       gap: 1.2vw;
       margin-top: 2vh;
     }
+    .next-actions.primary-actions {
+      margin-top: 3.2vh;
+      gap: 1.5vw;
+    }
     .next-action {
       border: 2px solid var(--ink);
       background: rgba(255,255,255,0.5);
@@ -2333,10 +2463,44 @@
       font-size: clamp(13px, 0.98vw, 18px);
       line-height: 1.35;
     }
+    .primary-actions .next-action {
+      position: relative;
+      min-height: 24vh;
+      padding: 2.5vh 1.35vw 2vh;
+      background: rgba(246,239,225,0.88);
+      box-shadow: 12px 12px 0 rgba(17,17,15,0.12);
+      font-size: clamp(15px, 1.08vw, 20px);
+      line-height: 1.45;
+    }
+    .primary-actions .next-action::before {
+      content: attr(data-step);
+      display: inline-block;
+      margin-bottom: 1.4vh;
+      border: 2px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 0.45vh 0.55vw;
+      font-family: var(--mono);
+      font-size: clamp(10px, 0.72vw, 13px);
+      font-weight: 900;
+    }
+    .primary-actions .next-action:nth-child(2) {
+      border-color: var(--red);
+      box-shadow: 12px 12px 0 rgba(231,51,35,0.16);
+    }
+    .primary-actions .next-action:nth-child(3) {
+      border-color: var(--cyan);
+      box-shadow: 12px 12px 0 rgba(0,137,167,0.14);
+    }
     .next-action b {
       display: block;
       color: var(--red);
       margin-bottom: 0.5vh;
+    }
+    .primary-actions .next-action b {
+      font-size: clamp(24px, 1.8vw, 36px);
+      line-height: 1.05;
+      margin-bottom: 1.2vh;
     }
 
     @media (max-width: 900px) {
@@ -2381,20 +2545,36 @@
           </svg>
           <div class="stage-chip"><small>01</small><b>采集</b><small>GitHub / RSS / media</small></div>
           <div class="stage-chip"><small>02</small><b>评分</b><small>selectionScores</small></div>
-          <div class="stage-chip"><small>03</small><b>内容包</b><small>schema-first script</small></div>
-          <div class="stage-chip"><small>04</small><b>配音 + 渲染</b><small>TTS / Remotion</small></div>
+          <div class="stage-chip"><small>03</small><b>内容包</b><small>content schema</small></div>
+          <div class="stage-chip"><small>04</small><b>标题 + 配音</b><small>publish lead / TTS</small></div>
           <div class="stage-chip"><small>05</small><b>发布</b><small>pack / upload</small></div>
         </div>
       </div>
-      <div class="ticker"><span>Sources -> Score -> ContentPack -> Voiceover -> Remotion -> publish/YYYY-MM-DD -> Bilibili</span><span>Sources -> Score -> ContentPack -> Voiceover -> Remotion -> publish/YYYY-MM-DD -> Bilibili</span></div>
+      <div class="ticker"><span>Sources -> Score -> ContentPack -> PublishTitle -> Voiceover -> Remotion -> publish/YYYY-MM-DD -> Bilibili</span><span>Sources -> Score -> ContentPack -> PublishTitle -> Voiceover -> Remotion -> publish/YYYY-MM-DD -> Bilibili</span></div>
       <div class="page-mark">开场</div>
     </section>
 
+    <section class="slide" data-title="结果">
+      <div class="topbar"><span>B 站结果</span><span>02 / 12</span></div>
+      <div data-left>
+        <div class="kicker">先看真实结果</div>
+        <h2 class="headline medium">先看成品</h2>
+      </div>
+      <div class="live-demo" data-rise style="--d:120ms">
+        <div class="live-demo-grid two-up">
+          <div class="live-demo-card"><small>01 / 已发视频</small><b>成片和封面</b><p>先看最终观感：封面、标题、简介、字幕和视频节奏。</p><div class="mono">Bilibili video page</div></div>
+          <div class="live-demo-card"><small>02 / 播放互动</small><b>播放、点赞、收藏</b><p>再看平台反馈，说明为什么后面要讲选题评分和标题策略。</p><div class="mono">views / likes / saves / comments</div></div>
+        </div>
+      </div>
+      <div class="ticker"><span>B 站已发视频 -> 播放和互动 -> 再拆自动化生产线</span><span>B 站已发视频 -> 播放和互动 -> 再拆自动化生产线</span></div>
+      <div class="page-mark">结果</div>
+    </section>
+
     <section class="slide" data-title="目标">
-      <div class="topbar"><span>目标约束</span><span>02 / 12</span></div>
+      <div class="topbar"><span>目标约束</span><span>03 / 12</span></div>
       <div data-left>
         <div class="kicker">稳定日更的约束</div>
-        <h2 class="headline medium">每天产出一条可发布视频</h2>
+        <h2 class="headline medium">目标：每天产出一条AI日报视频并自动发布</h2>
       </div>
       <div class="constraint-wall">
         <div class="note" style="--r:-1.6deg;--delay:0s" data-rise><h3>输入会变</h3><p>RSS、网页、GitHub 页面、API 都可能变化。<br><code>collect-emergency-daily.ts</code></p></div>
@@ -2407,7 +2587,7 @@
     </section>
 
     <section class="slide" data-title="架构">
-      <div class="topbar"><span>系统架构</span><span>03 / 12</span></div>
+      <div class="topbar"><span>系统架构</span><span>04 / 12</span></div>
       <div data-left>
         <div class="kicker">运行时主链路</div>
         <h2 class="headline medium wide">本地编排，外部能力只在 adapter 边界接入</h2>
@@ -2416,7 +2596,7 @@
           <strong>边界</strong>
           <code>Entry: Web / CLI / launchd</code>
           <code>Sources: GitHub / RSS / history</code>
-          <code>Providers: LLM / TTS / SAU</code>
+          <code>Providers: content LLM / title LLM / TTS / SAU</code>
           <code>Artifacts: job / audio / render / publish</code>
         </div>
       </div>
@@ -2425,7 +2605,7 @@
           <div class="spine-node" data-step="01" style="--step-index:1"><span class="side-chip">Entry</span><h3>触发</h3><p>Web、CLI、<code>launchd</code> 进入同一条 pipeline。</p></div>
           <div class="spine-node" data-step="02" style="--step-index:2"><span class="side-chip">Sources</span><h3>采集</h3><p>GitHub、RSS、网页和历史任务进入候选池。</p></div>
           <div class="spine-node" data-step="03" style="--step-index:3"><h3>评分</h3><p><code>selectionScores</code> 解释入选和扣分。</p></div>
-          <div class="spine-node" data-step="04" style="--step-index:4"><span class="side-chip">LLM provider</span><h3>内容生成</h3><p>LLM 只输出 <code>ContentPackDraft</code>。</p></div>
+          <div class="spine-node" data-step="04" style="--step-index:4"><span class="side-chip">LLM providers</span><h3>内容 / 标题</h3><p>内容输出 <code>ContentPackDraft</code>，标题只输出 <code>lead</code>。</p></div>
           <div class="spine-node" data-step="05" style="--step-index:5"><span class="side-chip">TTS provider</span><h3>配音</h3><p>产出音频、字幕、<code>durationMs</code>。</p></div>
           <div class="spine-node" data-step="06" style="--step-index:6"><h3>渲染</h3><p>Remotion 消费 <code>AiDailyVideoProps</code>。</p></div>
           <div class="spine-node" data-step="07" style="--step-index:7"><h3>打包</h3><p>成片、封面、标题、简介进入发布包。</p></div>
@@ -2438,12 +2618,12 @@
           <div><b>publish/YYYY-MM-DD</b>platform assets / result</div>
         </div>
       </div>
-      <div class="ticker"><span>触发 -> 采集 -> 评分 -> 内容生成 -> 配音 -> 渲染 -> 发布包 -> B 站发布 · </span><span>触发 -> 采集 -> 评分 -> 内容生成 -> 配音 -> 渲染 -> 发布包 -> B 站发布 · </span></div>
+      <div class="ticker"><span>触发 -> 采集 -> 评分 -> 内容生成 -> 标题生成 -> 配音 -> 渲染 -> 发布包 -> B 站发布 · </span><span>触发 -> 采集 -> 评分 -> 内容生成 -> 标题生成 -> 配音 -> 渲染 -> 发布包 -> B 站发布 · </span></div>
       <div class="page-mark">架构</div>
     </section>
 
     <section class="slide" data-title="模块交接">
-      <div class="topbar"><span>模块交接</span><span>04 / 12</span></div>
+      <div class="topbar"><span>模块交接</span><span>05 / 12</span></div>
       <div data-left>
         <div class="kicker">模块拆分规则</div>
         <h2 class="headline medium wide">模块边界<br>与数据交接</h2>
@@ -2463,18 +2643,18 @@
           <div class="handoff-arrow"></div>
           <div class="handoff-card featured">
             <small>02 / apps/web providers</small>
-            <h3>内容生成</h3>
-            <p>LLM 只基于事实材料生成结构化内容字段。</p>
+            <h3>内容和标题</h3>
+            <p>内容 LLM 生成结构化内容字段；标题 LLM 只为 headline 生成发布 lead。</p>
             <div class="handoff-meta">
               <div>output: ContentPack</div>
-              <div>guard: ContentPackDraftSchema</div>
+              <div>output: PublishTitle</div>
             </div>
           </div>
           <div class="handoff-arrow"></div>
           <div class="handoff-card">
             <small>03 / packages/video</small>
             <h3>视频渲染</h3>
-            <p>Remotion 只消费视频参数和音频时间线。</p>
+            <p>Remotion 只消费视频参数、发布标题 lead 和音频时间线。</p>
             <div class="handoff-meta">
               <div>input: AiDailyVideoProps</div>
               <div>output: mp4 + cover</div>
@@ -2497,12 +2677,12 @@
           <div><b>失败可重跑</b>从失败阶段重新执行，不必每天从头重来。</div>
         </div>
       </div>
-      <div class="ticker"><span>DailySnapshot -> ContentPack -> AiDailyVideoProps -> publish/YYYY-MM-DD · 阶段之间只通过明确产物交接</span><span>DailySnapshot -> ContentPack -> AiDailyVideoProps -> publish/YYYY-MM-DD · 阶段之间只通过明确产物交接</span></div>
+      <div class="ticker"><span>DailySnapshot -> ContentPack -> PublishTitle -> AiDailyVideoProps -> publish/YYYY-MM-DD · 阶段之间只通过明确产物交接</span><span>DailySnapshot -> ContentPack -> PublishTitle -> AiDailyVideoProps -> publish/YYYY-MM-DD · 阶段之间只通过明确产物交接</span></div>
       <div class="page-mark">模块交接</div>
     </section>
 
     <section class="slide" data-title="采集评分">
-      <div class="topbar"><span>采集与评分</span><span>05 / 12</span></div>
+      <div class="topbar"><span>采集与评分</span><span>06 / 12</span></div>
       <div data-left>
         <div class="kicker">先合并候选，再评分筛选</div>
         <h2 class="headline medium topic">选题不是热度排序，<br>而是适播性评分</h2>
@@ -2514,101 +2694,98 @@
             <small>01 / sources</small>
             <h3>多源输入</h3>
             <div class="flow-line"><b>GitHub</b><span>Trending / Search</span></div>
-            <div class="flow-line"><b>Media</b><span>RSS / 官方博客</span></div>
+            <div class="flow-line"><b>Media</b><span>官方博客 / RSS / 科技媒体</span></div>
             <div class="flow-line"><b>History</b><span>近 7 天任务</span></div>
           </div>
           <div class="flow-arrow" style="--i:1"></div>
           <div class="flow-panel" style="--i:2">
             <small>02 / normalize</small>
-            <h3>归一化</h3>
+            <h3>媒体筛选</h3>
             <div class="flow-line"><b>同 repo</b><span>合并 stars / topics</span></div>
-            <div class="flow-line"><b>同 URL</b><span>保留完整正文</span></div>
-            <div class="flow-line"><b>重复内容</b><span>历史扣分</span></div>
+            <div class="flow-line"><b>同 URL</b><span>合并事件 / 正文更完整优先</span></div>
+            <div class="flow-line"><b>时间窗</b><span>36h 主窗口，官方源 72h</span></div>
+            <div class="flow-line"><b>重复内容</b><span>近 7 天 URL / 标题降权</span></div>
           </div>
           <div class="flow-arrow" style="--i:3"></div>
           <div class="flow-panel score-gate" style="--i:4">
             <small>03 / score</small>
-            <h3>评分阶段</h3>
-            <div class="flow-line"><b>GitHub</b><span>AI token + dev fit + burst</span></div>
-            <div class="flow-line"><b>Media</b><span>launch signal + impact + trust</span></div>
-            <div class="flow-line"><b>Debug</b><span>selectionScores + reason</span></div>
+            <h3>开源项目</h3>
+            <div class="flow-line"><b>加分</b><span>来源权重、多来源命中、AI 关键词</span></div>
+            <div class="flow-line"><b>热度</b><span>stars today、爆发趋势、总星标</span></div>
+            <div class="flow-line"><b>适播</b><span>开发者 fit、近期活跃、新项目</span></div>
+            <div class="flow-line"><b>扣分</b><span>近 7 天重复、awesome/paper/tutorial</span></div>
           </div>
           <div class="flow-arrow" style="--i:5"></div>
           <div class="flow-panel" style="--i:6">
             <small>04 / selected</small>
-            <h3>入选池</h3>
-            <div class="selected-list">
-              <div style="--i:0;--score:.96"><span>GitHub project</span><b>128.4</b></div>
-              <div style="--i:1;--score:.87"><span>Model release</span><b>116.7</b></div>
-              <div style="--i:2;--score:.76"><span>API update</span><b>102.1</b></div>
-            </div>
-            <div class="flow-line"><b>目标</b><span>GitHub 3 + Media 3</span></div>
-            <div class="flow-line"><b>最低可用</b><span>总数 ≥ 2 且两类都有</span></div>
+            <h3>资讯内容</h3>
+            <div class="flow-line"><b>加分</b><span>AI 相关、动作信号、高关注主体</span></div>
+            <div class="flow-line"><b>影响</b><span>API/价格/模型/办公/语音/开发者</span></div>
+            <div class="flow-line"><b>可信</b><span>来源可信、跨源确认、官方发布</span></div>
+            <div class="flow-line"><b>扣分</b><span>软文、活动营销、金融快讯、非事件</span></div>
+            <div class="flow-line"><b>阈值</b><span>主阈值 50，兜底阈值 30</span></div>
           </div>
         </div>
-        <div class="feedback-row"><b>可解释性：</b>入选结果不是黑盒排序，而是由来源、归一化、历史去重和评分规则共同决定。</div>
+        <div class="feedback-row"><b>可解释性：</b><code>selectionScores</code> 会记录每个组件的分值和原因；现场如果被问“为什么选它”，可以按开源项目或资讯的加分/扣分组件回答。</div>
       </div>
-      <div class="ticker"><span>GitHub + Media + History -> normalized candidates -> selectionScores + reason + selectedCounts</span><span>GitHub + Media + History -> normalized candidates -> selectionScores + reason + selectedCounts</span></div>
+      <div class="ticker"><span>GitHub: source + AI + dev fit + stars today + burst + activity - repeat - low signal · Media: AI + action + impact + trust + freshness - soft/marketing/repeat</span><span>GitHub: source + AI + dev fit + stars today + burst + activity - repeat - low signal · Media: AI + action + impact + trust + freshness - soft/marketing/repeat</span></div>
       <div class="page-mark">采集评分</div>
     </section>
 
     <section class="slide" data-title="LLM">
-      <div class="topbar"><span>内容生成</span><span>06 / 12</span></div>
+      <div class="topbar"><span>LLM 分层</span><span>07 / 12</span></div>
       <div data-left>
         <div class="kicker">事实和状态由工程控制</div>
-        <h2 class="headline medium topic">LLM 生成<br>结构化内容包</h2>
+        <h2 class="headline medium topic">内容包和发布标题<br>分开生成</h2>
       </div>
       <div class="llm-flow-board" data-rise style="--d:120ms">
         <div class="llm-flow-main">
           <div class="llm-flow-card">
             <small>01 / facts</small>
             <b>整理输入材料</b>
-            <p><code>FeedItem</code>、正文摘要、repo facts 和标题要求先由本地代码整理。</p>
+            <p><code>FeedItem</code>、正文摘要、repo facts 和 schema 先由本地代码整理。</p>
           </div>
           <div class="llm-flow-arrow" style="--i:0"></div>
           <div class="llm-flow-card provider">
-            <small>02 / provider</small>
-            <b>调用 LLM provider</b>
-            <p>模型由 <code>MIMO_CONTENT_MODEL</code> 配置；Gemini、OpenAI 保留同签名 adapter。</p>
+            <small>02 / content provider</small>
+            <b>生成 ContentPack</b>
+            <p>内容模型由 <code>MIMO_CONTENT_MODEL</code> 配置，只写口播、要点和视觉卡片。</p>
           </div>
           <div class="llm-flow-arrow" style="--i:1"></div>
           <div class="llm-flow-card schema">
-            <small>03 / gate</small>
-            <b>Zod schema 校验</b>
-            <p><code>ContentPackDraftSchema.parse()</code> 通过后，才允许进入下游。</p>
+            <small>03 / headline select</small>
+            <b>选出 headline</b>
+            <p>内容包全部生成后，先构造基础 <code>AiDailyVideoProps</code> 选择头条。</p>
           </div>
           <div class="llm-flow-arrow" style="--i:2"></div>
           <div class="llm-flow-card">
-            <small>04 / output</small>
-            <b>补齐 ContentPack</b>
-            <p>模型只返回内容字段；<code>id</code>、<code>kind</code>、<code>sourceMeta</code> 由工程侧补齐。</p>
+            <small>04 / title provider</small>
+            <b>生成 PublishTitle</b>
+            <p><code>MIMO_TITLE_MODEL</code> 只返回 <code>lead</code>，不带日期、平台名和固定前缀。</p>
           </div>
         </div>
         <div class="llm-flow-detail">
           <div class="schema-mini">
-            <b>ContentPackDraftSchema</b>
+            <b>两个 schema gate</b>
             <code>{
-  title,
-  subtitle,
-  hookTitle,
-  spokenIntro,
-  spokenBody,
-  bulletPoints,
-  visualCard
+  ContentPackDraft,
+  PublishTitleDraft: {
+    lead
+  }
 }</code>
           </div>
           <div class="fallback-branch">
-            <b>失败支路：deterministic fallback</b>
-            <p>provider 异常或 Zod parse 失败时，回退到 <code>buildFallbackContentPack()</code>，用事实材料生成最低可用稿。</p>
+            <b>失败支路：retry, then stop</b>
+            <p>内容或标题 provider 异常、JSON parse 或 Zod 校验失败时，带错误摘要重试；多次失败后停止在 TTS 前。</p>
           </div>
         </div>
       </div>
-      <div class="ticker"><span>MiMo provider 默认 · MIMO_CONTENT_MODEL 可配置 · Gemini/OpenAI adapter 保留 · Zod schema 校验 · deterministic fallback</span><span>MiMo provider 默认 · MIMO_CONTENT_MODEL 可配置 · Gemini/OpenAI adapter 保留 · Zod schema 校验 · deterministic fallback</span></div>
-      <div class="page-mark">内容生成</div>
+      <div class="ticker"><span>ContentPackDraftSchema -> headline selection -> PublishTitleDraftSchema · MIMO_CONTENT_MODEL / MIMO_TITLE_MODEL · retry then stop</span><span>ContentPackDraftSchema -> headline selection -> PublishTitleDraftSchema · MIMO_CONTENT_MODEL / MIMO_TITLE_MODEL · retry then stop</span></div>
+      <div class="page-mark">LLM 分层</div>
     </section>
 
     <section class="slide" data-title="TTS">
-      <div class="topbar"><span>TTS 与字幕</span><span>07 / 12</span></div>
+      <div class="topbar"><span>TTS 与字幕</span><span>08 / 12</span></div>
       <div data-left>
         <div class="kicker">TTS provider 处理流程</div>
         <h2 class="headline medium topic">口播文本如何变成<br>视频时间线</h2>
@@ -2651,7 +2828,7 @@
     </section>
 
     <section class="slide" data-title="Remotion">
-      <div class="topbar"><span>视频渲染</span><span>08 / 12</span></div>
+      <div class="topbar"><span>视频渲染</span><span>09 / 12</span></div>
       <div data-left>
         <div class="kicker">Remotion 负责视频时间线</div>
         <h2 class="headline medium">Remotion 把数据变成可播放时间线</h2>
@@ -2665,18 +2842,18 @@
           </div>
           <div class="render-flow-card">
             <small>02 Props</small>
-            <b>buildAiDailyVideoProps()</b>
-            <p><code>AiDailyVideoProps</code> 是视频层唯一输入；模板组件只读 props 和音频路径。</p>
+            <b>select headline</b>
+            <p>第一次构造视频参数只用于选出 headline，再触发独立标题生成。</p>
           </div>
           <div class="render-flow-card">
-            <small>03 Timeline</small>
-            <b>attach voiceovers + buildVideoPlan()</b>
-            <p><code>buildVideoPlan()</code> 把内容、配音和默认时长换算成 scene frames。</p>
+            <small>03 Final Props</small>
+            <b>publishTitle + voiceovers</b>
+            <p>最终 <code>AiDailyVideoProps</code> 带上发布标题 lead、配音资源和字幕时间线。</p>
           </div>
           <div class="render-flow-card output">
             <small>04 Render</small>
             <b>MP4 + 4:3 Cover</b>
-            <p>视频和封面分 composition 输出，封面不依赖第一帧截图。</p>
+            <p>视频和封面分 composition 输出，封面优先使用 <code>publishTitle.lead</code>。</p>
           </div>
         </div>
         <div class="remotion-module">
@@ -2702,17 +2879,17 @@
           </div>
         </div>
       </div>
-      <div class="ticker"><span>ContentPacks -> video props -> voiceover timeline -> Remotion scene plan -> MP4 + 4:3 cover</span><span>ContentPacks -> video props -> voiceover timeline -> Remotion scene plan -> MP4 + 4:3 cover</span></div>
+      <div class="ticker"><span>ContentPacks -> headline selection -> PublishTitle -> final video props -> voiceover timeline -> Remotion scene plan -> MP4 + 4:3 cover</span><span>ContentPacks -> headline selection -> PublishTitle -> final video props -> voiceover timeline -> Remotion scene plan -> MP4 + 4:3 cover</span></div>
       <div class="page-mark">视频</div>
     </section>
 
     <section class="slide" data-title="发布">
-      <div class="topbar"><span>发布包</span><span>09 / 12</span></div>
+      <div class="topbar"><span>发布包</span><span>10 / 12</span></div>
       <div class="press-kit">
         <div data-left>
           <div class="kicker">已经跑通的成果</div>
           <h2 class="headline medium">生成发布包，<br>自动发布</h2>
-          <p class="lead small-lead"><code>publish:pack</code> 先做质量门禁，再把平台需要的所有资产固化到目录。<code>publish:auto</code> 只消费这个目录，避免上传时临时拼标题、简介和来源链接。</p>
+          <p class="lead small-lead"><code>publish:pack</code> 先做质量门禁，再把平台需要的所有资产固化到目录。平台标题读取生成阶段保存的 <code>publishTitle.lead</code>，只在平台层拼固定前后缀。</p>
           <div class="publish-flow-vertical">
             <div class="publish-flow-step" style="--i:0">
               <small>01</small>
@@ -2752,12 +2929,12 @@
           </div>
         </div>
       </div>
-      <div class="ticker"><span>quality gate -> pack: 公共视频/封面 + 平台文案 -> upload -> publish-result.json</span><span>quality gate -> pack: 公共视频/封面 + 平台文案 -> upload -> publish-result.json</span></div>
+      <div class="ticker"><span>quality gate -> publishTitle.lead + platform suffix -> pack: 公共视频/封面 + 平台文案 -> upload -> publish-result.json</span><span>quality gate -> publishTitle.lead + platform suffix -> pack: 公共视频/封面 + 平台文案 -> upload -> publish-result.json</span></div>
       <div class="page-mark">发布</div>
     </section>
 
     <section class="slide" data-title="定时">
-      <div class="topbar"><span>定时任务</span><span>10 / 12</span></div>
+      <div class="topbar"><span>定时任务</span><span>11 / 12</span></div>
       <div class="clock-room">
         <div class="clock" data-rise><div class="time">generate / publish</div></div>
         <div data-left>
@@ -2780,24 +2957,6 @@ failure trace  -> stageEvents + auto-publish.log
       <div class="page-mark">运行层</div>
     </section>
 
-    <section class="slide" data-title="演示">
-      <div class="topbar"><span>现场演示</span><span>11 / 12</span></div>
-      <div data-left>
-        <div class="kicker">2-3 分钟现场展示</div>
-        <h2 class="headline medium">实践成果</h2>
-      </div>
-      <div class="live-demo" data-rise style="--d:120ms">
-        <div class="live-demo-grid">
-          <div class="live-demo-card"><small>01 / B 站</small><b>已发布视频</b><p>看成片观感、封面、标题、简介和播放互动数据。</p><div class="mono">platform output</div></div>
-          <div class="live-demo-card"><small>02 / Web 后台</small><b>任务状态</b><p>看当天 job、阶段事件、选题分数和发布结果。</p><div class="mono">job / stageEvents / selectionScores</div></div>
-          <div class="live-demo-card"><small>03 / 本地目录</small><b>发布包</b><p>看视频、封面、metadata、简介、标签和来源链接。</p><div class="mono">publish/YYYY-MM-DD/</div></div>
-        </div>
-        <div class="live-proof">同一个日期任务贯穿三处：平台页面证明“已发布”，Web 后台证明“流程跑通”，本地发布包证明“产物可复核”。</div>
-      </div>
-      <div class="ticker"><span>B 站页面 · Web 后台 · publish/YYYY-MM-DD/ · 三处看同一个发布任务</span><span>B 站页面 · Web 后台 · publish/YYYY-MM-DD/ · 三处看同一个发布任务</span></div>
-      <div class="page-mark">演示</div>
-    </section>
-
     <section class="slide" data-title="后续优化">
       <div class="topbar"><span>下一步</span><span>12 / 12</span></div>
       <div data-left>
@@ -2805,17 +2964,25 @@ failure trace  -> stageEvents + auto-publish.log
         <h2 class="headline medium wide topic">TODO:<br>提升稳定性、质量</h2>
         <p class="lead small-lead">适合个人或小团队快速迭代的本地生产线：低耦合、易排查、能替换 provider，也保留人工 gate。下一阶段重点是稳定部署、发布前质检和 B 站数据回流。</p>
       </div>
-      <div class="loop-stage" data-rise style="--d:100ms;min-height:45vh;margin-top:2vh">
-        <div class="loop-node"><b>Produce</b><span>采集、评分、内容生成、配音、渲染</span></div>
-        <div class="loop-node"><b>Publish</b><span>发布包、标题、封面、简介、来源链接</span></div>
-        <div class="loop-node"><b>Measure</b><span>播放、点击、完播、收藏、评论</span></div>
-        <div class="loop-node"><b>Tune</b><span>调评分权重、标题策略、模板版本</span></div>
-        <div class="loop-core"><b>AI Daily Factory</b><span>从 Mac 上的自动化脚本，升级为稳定运行、可复盘、可调参的视频生成系统</span></div>
+      <div class="next-direction" data-rise style="--d:100ms">
+        <div class="direction-copy">
+          <span class="direction-kicker">from working script to operating system</span>
+          <b>从“能跑”到“稳定运营”</b>
+          <p>上半部分只说明方向：把已跑通的链路变成可持续生产、审核和反馈闭环。</p>
+        </div>
+        <div class="direction-orbit" aria-hidden="true">
+          <svg viewBox="0 0 600 180" preserveAspectRatio="none">
+            <path d="M45 120 C 180 20, 330 20, 555 112" />
+          </svg>
+          <div class="orbit-dot run"><div><b>Run</b><span>稳定触发</span></div></div>
+          <div class="orbit-dot review"><div><b>Review</b><span>发布前审核</span></div></div>
+          <div class="orbit-dot learn"><div><b>Learn</b><span>数据回流</span></div></div>
+        </div>
       </div>
-      <div class="next-actions" data-rise style="--d:180ms">
-        <div class="next-action"><b>稳定运行</b>迁到云主机 / 小主机，用 systemd 定时；LLM / TTS provider 改为可切换配置。</div>
-        <div class="next-action"><b>发布质检</b>把选题、文案、封面、成片、字幕覆盖率和音频时长集中到一个审核入口。</div>
-        <div class="next-action"><b>数据回流</b>用 B 站播放、点击、完播、收藏和评论，调整选题评分、标题和封面策略。</div>
+      <div class="next-actions primary-actions" data-rise style="--d:180ms">
+        <div class="next-action" data-step="01"><b>稳定运行</b>迁到云主机 / 小主机，用 systemd 定时；LLM / TTS provider 改为可切换配置。</div>
+        <div class="next-action" data-step="02"><b>发布质检</b>把选题、文案、封面、成片、字幕覆盖率和音频时长集中到一个审核入口。</div>
+        <div class="next-action" data-step="03"><b>数据回流</b>用 B 站播放、点击、完播、收藏和评论，调整选题评分、标题和封面策略。</div>
       </div>
       <div class="ticker"><span>稳定运行 · 发布质检 · 数据回流 · Produce -> Publish -> Measure -> Tune</span><span>稳定运行 · 发布质检 · 数据回流 · Produce -> Publish -> Measure -> Tune</span></div>
       <div class="page-mark">迭代</div>
